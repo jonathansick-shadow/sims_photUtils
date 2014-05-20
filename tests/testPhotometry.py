@@ -99,7 +99,7 @@ class testGalaxies(InstanceCatalog,AstrometryGalaxies,EBVmixin,Variability,Photo
 class variabilityUnitTest(unittest.TestCase):
 
     galaxy = DBObject.from_objid('galaxyBase')
-    rrly = DBObject.from_objid('rrly')
+    rrly = DBObject.from_objid('rrlystars')
     obsMD = DBObject.from_objid('opsim3_61')
     obs_metadata = obsMD.getObservationMetaData(88544919, 0.1, makeCircBounds = True)
     
@@ -123,7 +123,7 @@ class variabilityUnitTest(unittest.TestCase):
 class photometryUnitTest(unittest.TestCase):
        
     def testStars(self):
-        dbObj=DBObject.from_objid('rrly')
+        dbObj=DBObject.from_objid('rrlystars')
         obs_metadata_pointed=ObservationMetaData(mjd=2013.23, circ_bounds=dict(ra=200., dec=-30, radius=1.))
         obs_metadata_pointed.metadata = {}
         obs_metadata_pointed.metadata['Opsim_filter'] = 'i'
