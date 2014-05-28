@@ -40,6 +40,9 @@ class PhotometryBase(object):
     bandPassKey = []   
     phiArray = None
     waveLenStep = None
+    
+    bandPassDirLoaded = None
+    bandPassRootLoaded = None
 
     def setupPhiArray_dict(self):
         """ 
@@ -74,15 +77,32 @@ class PhotometryBase(object):
         by altering bandPassRoot (currently no infrastructure exists for altering the directory
         in which bandpass files are stored)
         """
-  
+        
+        #first check to make sure we haven't already loaded them
+
         if bandPassRoot == None:
             bandPassRoot = 'total_'
+        
+        if bandPassDir == None:
+            bandPassDir = os.getenv('LSST_THROUGHPUTS_DEFAULT')
+        
+        go_on = 1
+        if (self.bandPassDirLoaded == bandPassDir) and (self.bandPassRootLoaded == bandPassRoot):
+            go_on = 0
+            for bp in bandPassList:
+                if bp not in self.bandPassKey:
+                    go_on = 1
+        
+        if go_on == 0:
+            return
+        
+        self.bandPassDirLoaded = bandPassDir
+        self.bandPassRootLoaded = bandPassRoot
         
         if self.bandPassKey != bandPassList:
             self.bandPassKey=[]
             self.bandPasses={}
-            if bandPassDir == None:
-                bandPassDir = os.getenv('LSST_THROUGHPUTS_DEFAULT')
+
             for i in range(len(bandPassList)):
                 self.bandPassKey.append(bandPassList[i])
             
