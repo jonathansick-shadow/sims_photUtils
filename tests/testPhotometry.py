@@ -224,12 +224,12 @@ class testStars(InstanceCatalog,AstrometryStars,EBVmixin,Variability,PhotometryS
     catalog_type = 'test_stars'
     column_outputs=['id','raObserved','decObserved','raTrim','decTrim','magNorm',\
     'stellar_magNorm_var', \
-    'lsst_u','sigma_lsst_u','lsst_u_var','sigma_lsst_u_var',
-    'lsst_g','sigma_lsst_g','lsst_g_var','sigma_lsst_g_var',\
-    'lsst_r','sigma_lsst_r','lsst_r_var','sigma_lsst_r_var',\
-    'lsst_i','sigma_lsst_i','lsst_i_var','sigma_lsst_i_var',\
-    'lsst_z','sigma_lsst_z','lsst_z_var','sigma_lsst_z_var',\
-    'lsst_y','sigma_lsst_y','lsst_y_var','sigma_lsst_y_var',\
+    'lsst_u','lsst_adu_u','sigma_lsst_u','lsst_u_var','sigma_lsst_u_var',
+    'lsst_g','lsst_adu_g','sigma_lsst_g','lsst_g_var','sigma_lsst_g_var',\
+    'lsst_r','lsst_adu_r','sigma_lsst_r','lsst_r_var','sigma_lsst_r_var',\
+    'lsst_i','lsst_adu_i','sigma_lsst_i','lsst_i_var','sigma_lsst_i_var',\
+    'lsst_z','lsst_adu_z','sigma_lsst_z','lsst_z_var','sigma_lsst_z_var',\
+    'lsst_y','lsst_adu_y','sigma_lsst_y','lsst_y_var','sigma_lsst_y_var',\
     'EBV','varParamStr']
 
 class testGalaxies(InstanceCatalog,AstrometryGalaxies,EBVmixin,Variability,PhotometryGalaxies,testDefaults):

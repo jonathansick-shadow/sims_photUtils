@@ -697,7 +697,8 @@ class PhotometryStars(PhotometryBase):
     It assumes that we want LSST filters.
     """
                          
-    def calculate_magnitudes(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
+    def calculate_magnitudes(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None,
+                             doMag = True):
         """
         Take the array of bandpass keys bandPassList and the array of
         star names idNames and return a dict of dicts of magnitudes
@@ -719,6 +720,8 @@ class PhotometryStars(PhotometryBase):
         are stored in files named bandPassRoot_u.dat etc.).  If 'None' defaults to
         'total_'
         
+        @param [in] doMag if true returns magnitudes; if false returns ADU
+        
         @param [out] magDict is a dict such that
         magDict['AAA']['x'] is the magnitude in filter x of object AAA
         
@@ -730,15 +733,25 @@ class PhotometryStars(PhotometryBase):
         sedList = self.loadSeds(sedNames,magNorm = magNorm)
         
         magDict = {}
-        for i in range(len(idNames)):
-            name = idNames[i]
-            subDict = self.manyMagCalc_dict(sedList[i])
-            magDict[name] = subDict
+        
+        if doMag == True:
+            for i in range(len(idNames)):
+                name = idNames[i]
+                subDict = self.manyMagCalc_dict(sedList[i])
+                magDict[name] = subDict
+        else:
+            for i in range(len(idNames)):
+                name = idNames[i]
+                subDict = {}
+                for bp in self.bandPassKey:
+                    subDict[bp] = sedList[i].calcADU(self.bandPasses[bp])
+                magDict[name] = subDict
         
         return magDict
 
     
-    def meta_magnitudes_getter(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
+    def meta_magnitudes_getter(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None,
+                               doMag = True):
         """
         This method does most of the work for stellar magnitude getters
         
@@ -749,13 +762,15 @@ class PhotometryStars(PhotometryBase):
         @param [in] bandPassRoot is the root of bandpass filenames (i.e. bandpasses are
         stored in files named bandPassRoot_u.dat etc.).  If None defaults to 'total_'
         
+        @param [in] doMag if true returns magnitudes; if false returns ADU
+        
         @param [out] output is a 2d numpy array in which the rows are the bandpasses
         from bandPassList and the columns are the objects from idNames
         
         """
 
         magDict = self.calculate_magnitudes(idNames, bandPassList, 
-                      bandPassDir =bandPassDir, bandPassRoot = bandPassRoot)
+                      bandPassDir =bandPassDir, bandPassRoot = bandPassRoot, doMag = doMag)
         
         firstRow = []
         for name in idNames:
@@ -809,6 +824,18 @@ class PhotometryStars(PhotometryBase):
         idNames = self.column_by_name('id')
         bandPassList = ['u','g','r','i','z','y']
         return self.meta_magnitudes_getter(idNames, bandPassList)
+    
+    @compound('lsst_adu_u','lsst_adu_g','lsst_adu_r','lsst_adu_i','lsst_adu_z','lsst_adu_y')
+    def get_adu(self):
+        """
+        getter for LSST stellar magnitudes
+        
+        bandPassRoot is the root of the names of the files in which
+        the bandpasses are stored
+        """
+        idNames = self.column_by_name('id')
+        bandPassList = ['u','g','r','i','z','y']
+        return self.meta_magnitudes_getter(idNames, bandPassList, doMag = False)
     
     @compound('sdss_u','sdss_g','sdss_r','sdss_i','sdss_z')
     def get_sdss_magnitudes(self):
