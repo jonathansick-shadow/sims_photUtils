@@ -59,7 +59,7 @@ class PhotometryBase(object):
         sedobj = Sed()
         self.phiArray, self.waveLenStep = sedobj.setupPhiArray(bplist)
 
-    def loadBandPasses(self,bandPassList, bandPassRoot="total_"):
+    def loadBandPasses(self,bandPassList, bandPassDir = None, bandPassRoot = None):
         """
         This will take the list of band passes in bandPassList and use them to set up
         self.bandPasses, self.phiArray and self.waveLenStep (which are being cached so that 
@@ -68,22 +68,27 @@ class PhotometryBase(object):
         bandPassRoot contains the first part of the bandpass file name, i.e., it is assumed
         that the bandPasses are stored in files of the type
         
-        $LSST_THROUGHPUTS_DEFAULT/bandPassRoot_bandPassKey.dat
+        $LSST_THROUGHPUTS_DEFAULT/bandPassRoot_bandPassList[i].dat
         
         if we want to load bandpasses for a telescope other than LSST, we would do so
         by altering bandPassRoot (currently no infrastructure exists for altering the directory
         in which bandpass files are stored)
         """
+  
+        if bandPassRoot == None:
+            bandPassRoot = 'total_'
+        
         if self.bandPassKey != bandPassList:
             self.bandPassKey=[]
             self.bandPasses={}
-            path = os.getenv('LSST_THROUGHPUTS_DEFAULT')
+            if bandPassDir == None:
+                bandPassDir = os.getenv('LSST_THROUGHPUTS_DEFAULT')
             for i in range(len(bandPassList)):
                 self.bandPassKey.append(bandPassList[i])
             
             for w in self.bandPassKey:    
                 self.bandPasses[w] = Bandpass()
-                self.bandPasses[w].readThroughput(os.path.join(path,"%s.dat" % (bandPassRoot + w)))
+                self.bandPasses[w].readThroughput(os.path.join(bandPassDir,"%s.dat" % (bandPassRoot + w)))
         
             self.setupPhiArray_dict()
             
@@ -304,7 +309,7 @@ class PhotometryBase(object):
             for i in range(len(magnitudes[filterName])):
                 mm = magnitudes[filterName][i]
                
-                if mm != None:
+                if mm != None and mm>-990.0:
                     xx=10**(0.4*(mm - m5[filterName]))
                     ss = (0.04 - gamma[filterName])*xx + \
                          gamma[filterName]*xx*xx
@@ -404,7 +409,7 @@ class PhotometryGalaxies(PhotometryBase):
         
         return outMag
     
-    def calculate_magnitudes(self, bandPassList, idNames):
+    def calculate_magnitudes(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
         """
         Take the array of bandpass keys bandPassList and the array of galaxy
         names idNames ane return a dict of dicts of dicts of magnitudes
@@ -425,12 +430,17 @@ class PhotometryGalaxies(PhotometryBase):
         @param [in] idNames is a list of names uniquely identifying the objects whose magnitudes
         are being calculated
         
+        @param [in] bandPassRoot is the root of the filename of bandpasses (i.e. bandpasses are
+        stored in files named bandPassRoot_u.dat etc.).  If None, defaults to
+        'total_'
+        
         @param [out] masterDict is a dict of magnitudes such that
         masterDict['AAA']['BBB']['x'] is the magnitude in filter x of component BBB of galaxy AAA
         
         
         """
-        self.loadBandPasses(bandPassList)
+  
+        self.loadBandPasses(bandPassList,bandPassDir = bandPassDir, bandPassRoot = bandPassRoot)
         
         diskNames=self.column_by_name('sedFilenameDisk')
         bulgeNames=self.column_by_name('sedFilenameBulge')
@@ -475,108 +485,96 @@ class PhotometryGalaxies(PhotometryBase):
 
         return masterDict
      
-    @compound('uRecalc', 'gRecalc', 'rRecalc', 'iRecalc', 'zRecalc', 'yRecalc',
-              'uBulge', 'gBulge', 'rBulge', 'iBulge', 'zBulge', 'yBulge',
-              'uDisk', 'gDisk', 'rDisk', 'iDisk', 'zDisk', 'yDisk',
-              'uAgn', 'gAgn', 'rAgn', 'iAgn', 'zAgn', 'yAgn')
-    def get_allMags(self):
+
+    def meta_magnitudes_getter(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
         """
-        Getter for all of the component magnitudes of a galaxy (and their combined magnitude)
+        This method will return the magnitudes for arbitrary galaxy bandpasses
+        
+        @param [in] idNames is a list of object IDs
+        
+        @param [in] bandPassList is a list of bandpass names (e.g. 'u', 'g', 'r', 'i', etc)
+        
+        @param [in] bandPassRoot is the root of the bandpass file names (i.e. bandpasses
+        are stored in files with names bandPassRoot_u.dat etc).  If None, default to
+        'total_'
         """
-    
-        bandPassList=['u','g','r','i','z','y']
-        idNames=self.column_by_name('galid')
-        magDict=self.calculate_magnitudes(bandPassList,idNames)
-    
-        utotal=numpy.zeros(len(idNames),dtype=float)
-        gtotal=numpy.zeros(len(idNames),dtype=float)
-        rtotal=numpy.zeros(len(idNames),dtype=float)
-        itotal=numpy.zeros(len(idNames),dtype=float)
-        ztotal=numpy.zeros(len(idNames),dtype=float)
-        ytotal=numpy.zeros(len(idNames),dtype=float)
+
+        magDict=self.calculate_magnitudes(idNames, bandPassList,  
+                          bandPassDir = bandPassDir, bandPassRoot = bandPassRoot)
         
-        ubulge=numpy.zeros(len(idNames),dtype=float)
-        gbulge=numpy.zeros(len(idNames),dtype=float)
-        rbulge=numpy.zeros(len(idNames),dtype=float)
-        ibulge=numpy.zeros(len(idNames),dtype=float)
-        zbulge=numpy.zeros(len(idNames),dtype=float)
-        ybulge=numpy.zeros(len(idNames),dtype=float)
+        firstRowTotal = []
+        firstRowDisk = []
+        firstRowBulge = []
+        firstRowAgn = []
         
-        udisk=numpy.zeros(len(idNames),dtype=float)
-        gdisk=numpy.zeros(len(idNames),dtype=float)
-        rdisk=numpy.zeros(len(idNames),dtype=float)
-        idisk=numpy.zeros(len(idNames),dtype=float)
-        zdisk=numpy.zeros(len(idNames),dtype=float)
-        ydisk=numpy.zeros(len(idNames),dtype=float)
-        
-        uagn=numpy.zeros(len(idNames),dtype=float)
-        gagn=numpy.zeros(len(idNames),dtype=float)
-        ragn=numpy.zeros(len(idNames),dtype=float)
-        iagn=numpy.zeros(len(idNames),dtype=float)
-        zagn=numpy.zeros(len(idNames),dtype=float)
-        yagn=numpy.zeros(len(idNames),dtype=float)
-        
-        i=0
-        failure=-999.0
-        for i in range(len(idNames)):
-            name=idNames[i]
+        failure = -999.0
+        for name in idNames:
             
-            utotal[i]=magDict[name]["total"]["u"]
-            gtotal[i]=magDict[name]["total"]["g"]
-            rtotal[i]=magDict[name]["total"]["r"]
-            itotal[i]=magDict[name]["total"]["i"]
-            ztotal[i]=magDict[name]["total"]["z"]
-            ytotal[i]=magDict[name]["total"]["y"]
-           
+            firstRowTotal.append(magDict[name]["total"][bandPassList[0]])
+            
             if magDict[name]["bulge"]:
-                ubulge[i]=magDict[name]["bulge"]["u"]
-                gbulge[i]=magDict[name]["bulge"]["g"]
-                rbulge[i]=magDict[name]["bulge"]["r"]
-                ibulge[i]=magDict[name]["bulge"]["i"]
-                zbulge[i]=magDict[name]["bulge"]["z"]
-                ybulge[i]=magDict[name]["bulge"]["y"]
+                firstRowBulge.append(magDict[name]["bulge"][bandPassList[0]])
             else:
-                ubulge[i]=failure
-                gbulge[i]=failure
-                rbulge[i]=failure
-                ibulge[i]=failure
-                zbulge[i]=failure
-                ybulge[i]=failure
-           
+                firstRowBulge.append(failure)
+            
             if magDict[name]["disk"]:
-                udisk[i]=magDict[name]["disk"]["u"]
-                gdisk[i]=magDict[name]["disk"]["g"]
-                rdisk[i]=magDict[name]["disk"]["r"]
-                idisk[i]=magDict[name]["disk"]["i"]
-                zdisk[i]=magDict[name]["disk"]["z"]
-                ydisk[i]=magDict[name]["disk"]["y"]
+                firstRowDisk.append(magDict[name]["disk"][bandPassList[0]])
             else:
-                udisk[i]=failure
-                gdisk[i]=failure
-                rdisk[i]=failure
-                idisk[i]=failure
-                zdisk[i]=failure
-                ydisk[i]=failure
-           
+                firstRowDisk.append(failure)
+            
+            
             if magDict[name]["agn"]:
-                uagn[i]=magDict[name]["agn"]["u"]
-                gagn[i]=magDict[name]["agn"]["g"]
-                ragn[i]=magDict[name]["agn"]["r"]
-                iagn[i]=magDict[name]["agn"]["i"]
-                zagn[i]=magDict[name]["agn"]["z"]
-                yagn[i]=magDict[name]["agn"]["y"]
+                firstRowAgn.append(magDict[name]["agn"][bandPassList[0]])
             else:
-                uagn[i]=failure
-                gagn[i]=failure
-                ragn[i]=failure
-                iagn[i]=failure
-                zagn[i]=faiure
-                yagn[i]=failure
+                firstRowAgn.append(failure)
         
-        return numpy.array([utotal,gtotal,rtotal,itotal,ztotal,ytotal,\
-            ubulge,gbulge,rbulge,ibulge,zbulge,ybulge,\
-            udisk,gdisk,rdisk,idisk,zdisk,ydisk,\
-            uagn,gagn,ragn,iagn,zagn,yagn])
+        
+        outputTotal = numpy.array(firstRowTotal)
+        outputBulge = numpy.array(firstRowBulge)
+        outputDisk = numpy.array(firstRowDisk)
+        outputAgn = numpy.array(firstRowAgn)
+        
+        i = 1
+        while i<len(bandPassList):
+            rowTotal = []
+            rowDisk = []
+            rowBulge = []
+            rowAgn = []
+            
+            for name in idNames:
+                rowTotal.append(magDict[name]["total"][bandPassList[i]])
+            
+                if magDict[name]["bulge"]:
+                    rowBulge.append(magDict[name]["bulge"][bandPassList[i]])
+                else:
+                    rowBulge.append(failure)
+                
+                if magDict[name]["disk"]:
+                    rowDisk.append(magDict[name]["disk"][bandPassList[i]])
+                else:
+                    rowDisk.append(failure)
+                
+                if magDict[name]["agn"]:
+                    rowAgn.append(magDict[name]["agn"][bandPassList[i]])
+                else:
+                    rowAgn.append(failure)
+                
+            outputTotal = numpy.vstack([outputTotal,rowTotal])
+            outputBulge = numpy.vstack([outputBulge,rowBulge])
+            outputDisk = numpy.vstack([outputDisk,rowDisk])
+            outputAgn = numpy.vstack([outputAgn,rowAgn])
+        
+            i += 1
+        
+        
+        outputTotal = numpy.vstack([outputTotal,outputBulge])
+        outputTotal = numpy.vstack([outputTotal,outputDisk])
+        outputTotal = numpy.vstack([outputTotal,outputAgn])
+        
+        return outputTotal
+
+    
+    
     
     @compound('sigma_uRecalc','sigma_gRecalc','sigma_rRecalc',
               'sigma_iRecalc','sigma_zRecalc','sigma_yRecalc',
@@ -640,6 +638,35 @@ class PhotometryGalaxies(PhotometryBase):
                             agnDict['u'],agnDict['g'],agnDict['r'],
                             agnDict['i'],agnDict['z'],agnDict['y']])
         
+    @compound('uRecalc', 'gRecalc', 'rRecalc', 'iRecalc', 'zRecalc', 'yRecalc',
+              'uBulge', 'gBulge', 'rBulge', 'iBulge', 'zBulge', 'yBulge',
+              'uDisk', 'gDisk', 'rDisk', 'iDisk', 'zDisk', 'yDisk',
+              'uAgn', 'gAgn', 'rAgn', 'iAgn', 'zAgn', 'yAgn')
+    def get_all_mags(self):
+        """
+        Getter for LSST galaxy magnitudes
+        
+        """
+        idNames = self.column_by_name('galid')
+        bandPassList = ['u','g','r','i','z','y']
+        return self.meta_magnitudes_getter(idNames, bandPassList)
+    
+    @compound('sdss_uRecalc', 'sdss_gRecalc', 'sdss_rRecalc', 
+              'sdss_iRecalc', 'sdss_zRecalc',
+              'sdss_uBulge', 'sdss_gBulge', 'sdss_rBulge', 'sdss_iBulge', 'sdss_zBulge',
+              'sdss_uDisk', 'sdss_gDisk', 'sdss_rDisk', 'sdss_iDisk', 'sdss_zDisk',
+              'sdss_uAgn', 'sdss_gAgn', 'sdss_rAgn', 'sdss_iAgn', 'sdss_zAgn')
+    def get_all_sdss_mags(self):
+        """
+        example getter for sdss galaxy magnitudes
+        
+        bandPassRoot is the root of the names of the files in which
+        the bandpasses are stored
+        
+        """
+        idNames = self.column_by_name('galid')
+        bandPassList = ['u','g','r','i','z','y']
+        return self.meta_magnitudes_getter(idNames, bandPassList, bandPassRoot = 'sdss_')
         
         
 
@@ -650,7 +677,7 @@ class PhotometryStars(PhotometryBase):
     It assumes that we want LSST filters.
     """
                          
-    def calculate_magnitudes(self, bandPassList, idNames):
+    def calculate_magnitudes(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
         """
         Take the array of bandpass keys bandPassList and the array of
         star names idNames and return a dict of dicts of magnitudes
@@ -668,12 +695,16 @@ class PhotometryStars(PhotometryBase):
         
         @param [in] idNames is a list of names uniquely identifying the objects being considered
         
+        @param [in] bandPassRoot is the root of the filename for bandpasses (i.e. bandpasses
+        are stored in files named bandPassRoot_u.dat etc.).  If 'None' defaults to
+        'total_'
+        
         @param [out] magDict is a dict such that
         magDict['AAA']['x'] is the magnitude in filter x of object AAA
         
         """
 
-        self.loadBandPasses(bandPassList)
+        self.loadBandPasses(bandPassList, bandPassDir = bandPassDir, bandPassRoot = bandPassRoot)
         sedNames = self.column_by_name('sedFilename')
         magNorm = self.column_by_name('magNorm')
         sedList = self.loadSeds(sedNames,magNorm = magNorm)
@@ -686,34 +717,44 @@ class PhotometryStars(PhotometryBase):
         
         return magDict
 
-    @compound('lsst_u','lsst_g','lsst_r','lsst_i','lsst_z','lsst_y')
-    def get_magnitudes(self):
+    
+    def meta_magnitudes_getter(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
         """
-        Getter for stellar magnitudes
+        This method does most of the work for stellar magnitude getters
+        
+        @param [in] idNames is a list of object names
+        
+        @param [in] bandPassList is a list of bandpass names ('u', 'g', 'r', 'i,', etc.)
+        
+        @param [in] bandPassRoot is the root of bandpass filenames (i.e. bandpasses are
+        stored in files named bandPassRoot_u.dat etc.).  If None defaults to 'total_'
+        
+        @param [out] output is a 2d numpy array in which the rows are the bandpasses
+        from bandPassList and the columns are the objects from idNames
+        
         """
+
+        magDict = self.calculate_magnitudes(idNames, bandPassList, 
+                      bandPassDir =bandPassDir, bandPassRoot = bandPassRoot)
         
-        idNames = self.column_by_name('id')
-        bandPassList = ['u','g','r','i','z','y']
+        firstRow = []
+        for name in idNames:
+            firstRow.append(magDict[name][bandPassList[0]])
         
-        magDict = self.calculate_magnitudes(bandPassList,idNames)
+        output = numpy.array(firstRow)
         
-        uu = numpy.zeros(len(idNames),dtype=float)
-        gg = numpy.zeros(len(idNames),dtype=float)
-        rr = numpy.zeros(len(idNames),dtype=float)
-        ii = numpy.zeros(len(idNames),dtype=float)
-        zz = numpy.zeros(len(idNames),dtype=float)
-        yy = numpy.zeros(len(idNames),dtype=float)
+        i = 1
+        while i<len(bandPassList):
+            row = []
+            for name in idNames:
+                row.append(magDict[name][bandPassList[i]])
+            
+            i += 1
+            
+            output=numpy.vstack([output,row])
         
-        for i in range(len(idNames)):
-            uu[i] = magDict[idNames[i]]["u"]
-            gg[i] = magDict[idNames[i]]["g"]
-            rr[i] = magDict[idNames[i]]["r"]
-            ii[i] = magDict[idNames[i]]["i"]
-            zz[i] = magDict[idNames[i]]["z"]
-            yy[i] = magDict[idNames[i]]["y"]
-        
-        return numpy.array([uu,gg,rr,ii,zz,yy])
-      
+        return output
+    
     @compound('sigma_lsst_u','sigma_lsst_g','sigma_lsst_r','sigma_lsst_i',
               'sigma_lsst_z','sigma_lsst_y')
     def get_photometric_uncertainties(self):
@@ -735,3 +776,29 @@ class PhotometryStars(PhotometryBase):
 
         return numpy.array([outputDict['u'],outputDict['g'],outputDict['r'],
                             outputDict['i'],outputDict['z'],outputDict['y']])
+
+
+    @compound('lsst_u','lsst_g','lsst_r','lsst_i','lsst_z','lsst_y')
+    def get_magnitudes(self):
+        """
+        getter for LSST stellar magnitudes
+        
+        bandPassRoot is the root of the names of the files in which
+        the bandpasses are stored
+        """
+        idNames = self.column_by_name('id')
+        bandPassList = ['u','g','r','i','z','y']
+        return self.meta_magnitudes_getter(idNames, bandPassList)
+    
+    @compound('sdss_u','sdss_g','sdss_r','sdss_i','sdss_z')
+    def get_sdss_magnitudes(self):
+        """
+        example getter for sdss stellar magnitudes
+        
+        bandPassRoot is the root of the names of the files in which
+        the bandpasses are stored
+        """
+        idNames = self.column_by_name('id')
+        bandPassList = ['u','g','r','i','z']
+        bandPassRoot = 'sdss_'
+        return self.meta_magnitudes_getter(idNames, bandPassList, bandPassRoot = bandPassRoot)

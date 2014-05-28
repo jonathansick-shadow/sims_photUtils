@@ -11,14 +11,20 @@ import lsst.utils.tests as utilsTests
 
 from lsst.sims.catalogs.measures.instance import InstanceCatalog
 from lsst.sims.catalogs.generation.db import DBObject, ObservationMetaData
-from lsst.sims.coordUtils.Astrometry import AstrometryGalaxies, AstrometryStars
+from lsst.sims.coordUtils.Astrometry import AstrometryGalaxies, AstrometryStars, compound
 from lsst.sims.photUtils.Photometry import PhotometryGalaxies, PhotometryStars
+from lsst.sims.photUtils.Bandpass import Bandpass
+from lsst.sims.photUtils.Sed import Sed
 from lsst.sims.photUtils.EBV import EBVmixin
 
 from lsst.sims.photUtils.Variability import Variability
 
 class testDefaults(object):
-
+    """
+    This class just provides default values for quantities that
+    the astrometry mixins require in order to run
+    """
+    
     def get_proper_motion_ra(self):
         ra=self.column_by_name('raJ2000')
         out=numpy.zeros(len(ra))
@@ -52,12 +58,167 @@ class testDefaults(object):
         
         return out
 
+class cartoonPhotometryStars(PhotometryStars):
+    """
+    This is a class to support loading cartoon bandpasses into photometry so that we can be sure
+    that the photometry mixin is loading the right files and calculating the right magnitudes.
+    """
+
+    @compound('cartoon_u','cartoon_g','cartoon_r','cartoon_i','cartoon_z')
+    def get_magnitudes(self):
+        """
+        Example photometry getter for alternative (i.e. non-LSST) bandpasses
+        """
+        
+        idNames = self.column_by_name('id')
+        bandPassList=['u','g','r','i','z']
+        bandPassDir=os.getenv('SIMS_PHOTUTILS_DIR')+'/tests/cartoonSedTestData/'
+        output = self.meta_magnitudes_getter(idNames, bandPassList, 
+                  bandPassDir = bandPassDir, bandPassRoot = 'test_bandpass_')
+        
+        #############################################################################
+        #Everything below this comment exists solely for the purposes of the unit test
+        #if you need to write a customized getter for photometry that uses non-LSST
+        #bandpasses, you only need to emulate the code above this comment.
+       
+       
+        magNormList = self.column_by_name('magNorm')
+        sedNames = self.column_by_name('sedFilename')
+        
+        #the two variables below will allow us to get at the SED and magnitude
+        #data from within the unit test class, so that we can be sure
+        #that the mixin loaded the correct bandPasses
+        sublist = self.loadSeds(sedNames,magNorm = magNormList)
+        for ss in sublist:
+            self.sedMasterList.append(ss)
+        
+        if len(output) > 0:
+            for i in range(len(output[0])):
+                subList = []
+                for j in range(len(output)):
+                    subList.append(output[j][i])
+            
+                self.magnitudeMasterList.append(subList)
+       
+        return output
+
+
+class cartoonPhotometryGalaxies(PhotometryGalaxies):
+    """
+    This is a class to support loading cartoon bandpasses into photometry so that we can be sure
+    that the photometry mixin is loading the right files and calculating the right magnitudes.
+    """
+
+    @compound('ctotal_u','ctotal_g','ctotal_r','ctotal_i','ctotal_z',
+              'cbulge_u','cbulge_g','cbulge_r','cbulge_i','cbulge_z',
+              'cdisk_u','cdisk_g','cdisk_r','cdisk_i','cdisk_z',
+              'cagn_u','cagn_g','cagn_r','cagn_i','cagn_z')
+    def get_magnitudes(self):
+        """
+        getter for photometry of galaxies using non-LSST bandpasses
+        """
+        
+        idNames = self.column_by_name('galid')
+        bandPassList=['u','g','r','i','z']
+        bandPassDir=os.getenv('SIMS_PHOTUTILS_DIR')+'/tests/cartoonSedTestData/'
+        output = self.meta_magnitudes_getter(idNames, bandPassList, 
+                  bandPassDir = bandPassDir, bandPassRoot = 'test_bandpass_')
+        
+        ##########################################################################
+        #Everything below this comment exists only for the purposes of the unittest.
+        #If you need to write your own customized getter for photometry using 
+        #non-LSST bandpasses, you only need to emulate the code above this comment
+        
+        if len(output) > 0:
+            for i in range(len(output[0])):
+                j = 5
+                subList = []
+                while j < 10:
+                    subList.append(output[j][i])
+                    j += 1
+                self.magnitudeMasterDict['Bulge'].append(subList)
+                
+                subList = []
+                while j < 15:
+                    subList.append(output[j][i])
+                    j += 1
+                self.magnitudeMasterDict['Disk'].append(subList)
+                
+                subList = []
+                while j < 20:
+                    subList.append(output[j][i])
+                    j += 1
+                self.magnitudeMasterDict['Agn'].append(subList)
+                
+                
+        
+        
+        componentNames = ['Bulge','Disk','Agn']
+        
+        for cc in componentNames:
+            magName = "magNorm" + cc
+            magNormList = self.column_by_name(magName)
+            sName = "sedFilename" + cc
+            sedNames = self.column_by_name(sName)
+            
+            if cc == 'Bulge' or cc == 'Disk':
+                AvName = "internalAv"+cc
+                Av = self.column_by_name(AvName)
+            else:
+                Av = None
+        
+            
+            redshift = self.column_by_name("redshift")
+            
+            sublist = self.loadSeds(sedNames, magNorm = magNormList)
+            self.applyAvAndRedshift(sublist, internalAv = Av, redshift = redshift)
+            
+            for ss in sublist:
+                self.sedMasterDict[cc].append(ss)
+       
+        return output
+
+
+
+
 class testCatalog(InstanceCatalog,AstrometryStars,Variability,testDefaults):
     catalog_type = 'MISC'
     default_columns=[('expmjd',5000.0,float)]
+    
     def db_required_columns(self):
         return ['raJ2000'],['varParamStr']
 
+
+class cartoonStars(InstanceCatalog,AstrometryStars,EBVmixin,Variability,cartoonPhotometryStars,testDefaults):
+    catalog_type = 'cartoonStars'
+    column_outputs=['id','raObserved','decObserved','magNorm',\
+    'cartoon_u','cartoon_g','cartoon_r','cartoon_i','cartoon_z']
+    
+    #the lists below will contain the SED objects and the magnitudes
+    #in a form that unittest can access and validate
+    
+    sedMasterList = []
+    magnitudeMasterList = []
+    
+
+class cartoonGalaxies(InstanceCatalog,AstrometryGalaxies,EBVmixin,Variability,cartoonPhotometryGalaxies,testDefaults):
+    catalog_type = 'cartoonGalaxies'
+    column_outputs=['galid','raObserved','decObserved',\
+    'ctotal_u','ctotal_g','ctotal_r','ctotal_i','ctotal_z']
+    
+    #the dicts below will contain the SED objects and the magnitudes
+    #in a form that unittest can access and validate
+    
+    sedMasterDict = {}
+    sedMasterDict["Bulge"] = []
+    sedMasterDict["Disk"] = []
+    sedMasterDict["Agn"] = []
+    
+    magnitudeMasterDict = {}
+    magnitudeMasterDict["Bulge"] = []
+    magnitudeMasterDict["Disk"] = []
+    magnitudeMasterDict["Agn"] = []
+ 
         
 class testStars(InstanceCatalog,AstrometryStars,EBVmixin,Variability,PhotometryStars,testDefaults):
     catalog_type = 'test_stars'
@@ -70,7 +231,7 @@ class testStars(InstanceCatalog,AstrometryStars,EBVmixin,Variability,PhotometryS
     'lsst_z','sigma_lsst_z','lsst_z_var','sigma_lsst_z_var',\
     'lsst_y','sigma_lsst_y','lsst_y_var','sigma_lsst_y_var',\
     'EBV','varParamStr']
-    
+
 class testGalaxies(InstanceCatalog,AstrometryGalaxies,EBVmixin,Variability,PhotometryGalaxies,testDefaults):
     catalog_type = 'test_galaxies'
     column_outputs=['galid','raObserved','decObserved',\
@@ -123,26 +284,124 @@ class variabilityUnitTest(unittest.TestCase):
 class photometryUnitTest(unittest.TestCase):
        
     def testStars(self):
+        """
+        Try to generate a write an instance catalog of RRLyrae stars
+        """
+        
+        dbObj=DBObject.from_objid('rrlystars') # the data base from which objects will be drawn for the catalog
+        
+        #generate the metadate describing the observation
+
+        obs_metadata_pointed=ObservationMetaData(mjd=2013.23, circ_bounds=dict(ra=200., dec=-30, radius=1.))
+        obs_metadata_pointed.metadata = {}
+        obs_metadata_pointed.metadata['Opsim_filter'] = 'i' #the filter in which the normalizing magnitude 
+                                                            #resides
+        
+        
+        test_cat=testStars(dbObj,obs_metadata=obs_metadata_pointed)
+        test_cat.write_catalog("testStarsOutput.txt")
+    
+    def testAlternateBandpassesStars(self):
+        """
+        This will test our ability to do photometry using non-LSST bandpasses.
+        
+        It will first calculate the magnitudes using the getters in cartoonPhotometryStars.
+        
+        It will then load the alternate bandpass files 'by hand' and re-calculate the magnitudes
+        and make sure that the magnitude values agree.  This is guarding against the possibility
+        that some default value did not change and the code actually ended up loading the
+        LSST bandpasses.
+        """
+        
         dbObj=DBObject.from_objid('rrlystars')
         obs_metadata_pointed=ObservationMetaData(mjd=2013.23, circ_bounds=dict(ra=200., dec=-30, radius=1.))
         obs_metadata_pointed.metadata = {}
         obs_metadata_pointed.metadata['Opsim_filter'] = 'i'
-        test_cat=testStars(dbObj,obs_metadata=obs_metadata_pointed)
-        test_cat.write_catalog("testStarsOutput.txt")
+        test_cat=cartoonStars(dbObj,obs_metadata=obs_metadata_pointed)
+        test_cat.write_catalog("testStarsCartoon.txt")
+        
+        cartoonDir = os.getenv('SIMS_PHOTUTILS_DIR')+'/tests/cartoonSedTestData/'
+        testBandPasses = {}
+        keys = ['u','g','r','i','z']
+        
+        bplist = []
+
+        for kk in keys:
+            testBandPasses[kk] = Bandpass()
+            testBandPasses[kk].readThroughput(os.path.join(cartoonDir,"test_bandpass_%s.dat" % kk))
+            bplist.append(testBandPasses[kk])
+        
+        sedObj = Sed()
+        phiArray, waveLenStep = sedObj.setupPhiArray(bplist)
+
+        i = 0
+        for ss in test_cat.sedMasterList:
+            ss.resampleSED(wavelen_match = bplist[0].wavelen)
+            ss.flambdaTofnu()
+            mags = -2.5*numpy.log10(numpy.sum(phiArray*ss.fnu, axis=1)*waveLenStep) - ss.zp
+            for j in range(len(mags)):
+                self.assertAlmostEqual(mags[j],test_cat.magnitudeMasterList[i][j],10)
+            i += 1
     
     
     def testGalaxies(self):
+        """
+        Attempt to generate and write an instance catalog of galaxies
+        """
+        
         dbObj=DBObject.from_objid('galaxyBase')
         obs_metadata_pointed=ObservationMetaData(mjd=50000.0, circ_bounds=dict(ra=0., dec=0., radius=0.01))
         obs_metadata_pointed.metadata = {}
         obs_metadata_pointed.metadata['Opsim_filter'] = 'i'
+
         test_cat=testGalaxies(dbObj,obs_metadata=obs_metadata_pointed)
         test_cat.write_catalog("testGalaxiesOutput.txt")
+
+    def testAlternateBandpassesGalaxies(self):
+        """
+        the same as testAlternateBandpassesStars, but for galaxies
+        """
+        
+        dbObj=DBObject.from_objid('galaxyBase')
+        obs_metadata_pointed=ObservationMetaData(mjd=50000.0, circ_bounds=dict(ra=0., dec=0., radius=0.01))
+        obs_metadata_pointed.metadata = {}
+        obs_metadata_pointed.metadata['Opsim_filter'] = 'i'
+        test_cat=cartoonGalaxies(dbObj,obs_metadata=obs_metadata_pointed)
+        test_cat.write_catalog("testGalaxiesCartoon.txt")
+        
+        cartoonDir = os.getenv('SIMS_PHOTUTILS_DIR')+'/tests/cartoonSedTestData/'
+        testBandPasses = {}
+        keys = ['u','g','r','i','z']
+        
+        bplist = []
+
+        for kk in keys:
+            testBandPasses[kk] = Bandpass()
+            testBandPasses[kk].readThroughput(os.path.join(cartoonDir,"test_bandpass_%s.dat" % kk))
+            bplist.append(testBandPasses[kk])
+        
+        sedObj = Sed()
+        phiArray, waveLenStep = sedObj.setupPhiArray(bplist)
+        
+        components = ['Bulge', 'Disk', 'Agn']
+        
+        for cc in components:
+            i = 0
+            for ss in test_cat.sedMasterDict[cc]:
+                if ss.wavelen != None:
+                    ss.resampleSED(wavelen_match = bplist[0].wavelen)
+                    ss.flambdaTofnu()
+                    mags = -2.5*numpy.log10(numpy.sum(phiArray*ss.fnu, axis=1)*waveLenStep) - ss.zp
+                    for j in range(len(mags)):
+                        self.assertAlmostEqual(mags[j],test_cat.magnitudeMasterDict[cc][i][j],10)
+                i += 1
+ 
+
      
 def suite():
     utilsTests.init()
     suites = []
-    suites += unittest.makeSuite(variabilityUnitTest)
+    #suites += unittest.makeSuite(variabilityUnitTest)
     suites += unittest.makeSuite(photometryUnitTest)
     return unittest.TestSuite(suites)
 
