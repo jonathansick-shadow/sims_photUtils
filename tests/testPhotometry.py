@@ -237,24 +237,27 @@ class testGalaxies(InstanceCatalog,AstrometryGalaxies,EBVmixin,Variability,Photo
     column_outputs=['galid','raObserved','decObserved',\
         'raTrim','decTrim',
         'magNorm_Recalc_var', 'magNormAgn', 'magNormBulge', 'magNormDisk', \
-        'uRecalc', 'sigma_uRecalc', 'uRecalc_var','sigma_uRecalc_var',\
-        'gRecalc', 'sigma_gRecalc', 'gRecalc_var','sigma_gRecalc_var',\
-        'rRecalc', 'sigma_rRecalc', 'rRecalc_var', 'sigma_rRecalc_var',\
-         'iRecalc', 'sigma_iRecalc', 'iRecalc_var','sigma_iRecalc_var',\
-         'zRecalc', 'sigma_zRecalc', 'zRecalc_var', 'sigma_zRecalc_var',\
-         'yRecalc', 'sigma_yRecalc', 'yRecalc_var', 'sigma_yRecalc_var',\
-        'sedFilenameBulge','uBulge', 'sigma_uBulge', 'gBulge', 'sigma_gBulge', \
-        'rBulge', 'sigma_rBulge', 'iBulge', 'sigma_iBulge', 'zBulge', 'sigma_zBulge',\
-         'yBulge', 'sigma_yBulge', \
-        'sedFilenameDisk','uDisk', 'sigma_uDisk', 'gDisk', 'sigma_gDisk', 'rDisk', 'sigma_rDisk', \
-        'iDisk', 'sigma_iDisk', 'zDisk', 'sigma_zDisk', 'yDisk', 'sigma_yDisk', \
+        'uRecalc', 'uRecalc_adu', 'sigma_uRecalc', 'uRecalc_var','sigma_uRecalc_var',\
+        'gRecalc', 'gRecalc_adu', 'sigma_gRecalc', 'gRecalc_var','sigma_gRecalc_var',\
+        'rRecalc', 'rRecalc_adu', 'sigma_rRecalc', 'rRecalc_var', 'sigma_rRecalc_var',\
+         'iRecalc', 'iRecalc_adu', 'sigma_iRecalc', 'iRecalc_var','sigma_iRecalc_var',\
+         'zRecalc', 'zRecalc_adu', 'sigma_zRecalc', 'zRecalc_var', 'sigma_zRecalc_var',\
+         'yRecalc', 'yRecalc_adu', 'sigma_yRecalc', 'yRecalc_var', 'sigma_yRecalc_var',\
+        'sedFilenameBulge','uBulge', 'uBulge_adu', 'sigma_uBulge', 'gBulge', 'gBulge_adu', 'sigma_gBulge', \
+        'rBulge', 'rBulge_adu', 'sigma_rBulge', 'iBulge', 'iBulge_adu', 'sigma_iBulge', \
+        'zBulge', 'zBulge_adu', 'sigma_zBulge',\
+         'yBulge', 'yBulge_adu', 'sigma_yBulge', \
+        'sedFilenameDisk','uDisk', 'uDisk_adu', 'sigma_uDisk', 'gDisk', 'gDisk_adu', \
+        'sigma_gDisk', 'rDisk', 'rDisk_adu', 'sigma_rDisk', \
+        'iDisk', 'iDisk_adu', 'sigma_iDisk', 'zDisk', 'zDisk_adu', 'sigma_zDisk', \
+        'yDisk', 'yDisk_adu', 'sigma_yDisk', \
         'sedFilenameAgn',\
-        'uAgn', 'sigma_uAgn', 'uAgn_var', 'sigma_uAgn_var',\
-        'gAgn', 'sigma_gAgn', 'gAgn_var', 'sigma_gAgn_var',\
-        'rAgn', 'sigma_rAgn', 'rAgn_var', 'sigma_rAgn_var',\
-        'iAgn', 'sigma_iAgn', 'iAgn_var', 'sigma_iAgn_var',\
-        'zAgn', 'sigma_zAgn', 'zAgn_var', 'sigma_zAgn_var',\
-        'yAgn', 'sigma_yAgn', 'yAgn_var', 'sigma_yAgn_var', 'varParamStr']
+        'uAgn', 'uAgn_adu', 'sigma_uAgn', 'uAgn_var', 'sigma_uAgn_var',\
+        'gAgn', 'gAgn_adu', 'sigma_gAgn', 'gAgn_var', 'sigma_gAgn_var',\
+        'rAgn', 'rAgn_adu', 'sigma_rAgn', 'rAgn_var', 'sigma_rAgn_var',\
+        'iAgn', 'iAgn_adu', 'sigma_iAgn', 'iAgn_var', 'sigma_iAgn_var',\
+        'zAgn', 'zAgn_adu', 'sigma_zAgn', 'zAgn_var', 'sigma_zAgn_var',\
+        'yAgn', 'yAgn_adu', 'sigma_yAgn', 'yAgn_var', 'sigma_yAgn_var', 'varParamStr']
 
 
 class variabilityUnitTest(unittest.TestCase):

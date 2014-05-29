@@ -352,7 +352,8 @@ class PhotometryGalaxies(PhotometryBase):
     """
     
     def calculate_component_magnitudes(self,objectNames, componentNames, bandPassList, \
-                                       magNorm = 15.0, internalAv = None, redshift = None):
+                                       magNorm = 15.0, internalAv = None, redshift = None,
+                                       doMag = True):
         
         """
         Calculate the magnitudes for different components (disk, bulge, agn, etc) of galaxies.
@@ -372,6 +373,8 @@ class PhotometryGalaxies(PhotometryBase):
         
         @param [in] redshift is pretty self-explanatory
         
+        @param [in] doMag if true return magnitudes; if false return ADU
+        
         @param [out] componentMags is a dict of dicts such that
         magnitude["objectname"]["filter label"] will return the magnitude in that filter
         for the associated component Sed
@@ -384,9 +387,21 @@ class PhotometryGalaxies(PhotometryBase):
             componentSed = self.loadSeds(componentNames, magNorm = magNorm)
             self.applyAvAndRedshift(componentSed, internalAv = internalAv, redshift = redshift)
             
-            for i in range(len(objectNames)):
-                subDict = self.manyMagCalc_dict(componentSed[i])
-                componentMags[objectNames[i]] = subDict
+            if doMag == True:
+                for i in range(len(objectNames)):
+                    subDict = self.manyMagCalc_dict(componentSed[i])
+                    componentMags[objectNames[i]] = subDict
+            else:
+                for i in range(len(objectNames)):
+                    subDict = {}
+                    for bp in self.bandPassKey:
+                        if componentSed[i].wavelen != None:
+                            subDict[bp] = componentSed[i].calcADU(self.bandPasses[bp])
+                        else:
+                            subDict[bp] = 0.0
+                        
+                    componentMags[objectNames[i]] = subDict
+            
         
         else:
             subDict={}
@@ -429,7 +444,8 @@ class PhotometryGalaxies(PhotometryBase):
         
         return outMag
     
-    def calculate_magnitudes(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
+    def calculate_magnitudes(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None,
+                             doMag = True):
         """
         Take the array of bandpass keys bandPassList and the array of galaxy
         names idNames ane return a dict of dicts of dicts of magnitudes
@@ -454,6 +470,8 @@ class PhotometryGalaxies(PhotometryBase):
         stored in files named bandPassRoot_u.dat etc.).  If None, defaults to
         'total_'
         
+        @param [in] doMag if true return magnitudes; if false return ADU
+        
         @param [out] masterDict is a dict of magnitudes such that
         masterDict['AAA']['BBB']['x'] is the magnitude in filter x of component BBB of galaxy AAA
         
@@ -476,23 +494,33 @@ class PhotometryGalaxies(PhotometryBase):
         redshift = self.column_by_name('redshift')
          
         diskMags = self.calculate_component_magnitudes(idNames,diskNames,bandPassList,magNorm = diskmn, \
-                        internalAv = diskAv, redshift = redshift)
+                        internalAv = diskAv, redshift = redshift, doMag = doMag)
                         
         bulgeMags = self.calculate_component_magnitudes(idNames,bulgeNames,bandPassList,magNorm = bulgemn, \
-                        internalAv = bulgeAv, redshift = redshift)
+                        internalAv = bulgeAv, redshift = redshift, doMag = doMag)
                         
         agnMags = self.calculate_component_magnitudes(idNames,agnNames,bandPassList,magNorm = agnmn, \
-                        redshift = redshift)
+                        redshift = redshift, doMag = doMag)
         
         total_mags = {}
         masterDict = {}
 
         for i in range(len(idNames)):
             total_mags={}
-            for ff in bandPassList:
-                total_mags[ff]=self.sum_magnitudes(disk = diskMags[idNames[i]][ff],
-                                bulge = bulgeMags[idNames[i]][ff], agn = agnMags[idNames[i]][ff])
-                
+            if doMag == True:
+                for ff in bandPassList:
+                    total_mags[ff]=self.sum_magnitudes(disk = diskMags[idNames[i]][ff],
+                                    bulge = bulgeMags[idNames[i]][ff], agn = agnMags[idNames[i]][ff])
+            
+            else:
+                for ff in bandPassList:
+                    total_mags[ff] =0.0
+                    if diskMags[idNames[i]][ff] != None:
+                        total_mags[ff] += diskMags[idNames[i]][ff]
+                    if bulgeMags[idNames[i]][ff] != None:
+                        total_mags[ff] += bulgeMags[idNames[i]][ff]
+                    if agnMags[idNames[i]][ff] != None:
+                        total_mags[ff] += agnMags[idNames[i]][ff]    
                 
             subDict={}
             subDict["total"] = total_mags
@@ -506,7 +534,8 @@ class PhotometryGalaxies(PhotometryBase):
         return masterDict
      
 
-    def meta_magnitudes_getter(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None):
+    def meta_magnitudes_getter(self, idNames, bandPassList, bandPassDir = None, bandPassRoot = None,
+                               doMag = True):
         """
         This method will return the magnitudes for arbitrary galaxy bandpasses
         
@@ -517,10 +546,12 @@ class PhotometryGalaxies(PhotometryBase):
         @param [in] bandPassRoot is the root of the bandpass file names (i.e. bandpasses
         are stored in files with names bandPassRoot_u.dat etc).  If None, default to
         'total_'
+        
+        @param [in] doMag if true returns magnitudes; if false return ADU
         """
 
         magDict=self.calculate_magnitudes(idNames, bandPassList,  
-                          bandPassDir = bandPassDir, bandPassRoot = bandPassRoot)
+                          bandPassDir = bandPassDir, bandPassRoot = bandPassRoot, doMag = doMag)
         
         firstRowTotal = []
         firstRowDisk = []
@@ -670,6 +701,23 @@ class PhotometryGalaxies(PhotometryBase):
         idNames = self.column_by_name('galid')
         bandPassList = ['u','g','r','i','z','y']
         return self.meta_magnitudes_getter(idNames, bandPassList)
+
+    @compound('uRecalc_adu', 'gRecalc_adu', 'rRecalc_adu', 'iRecalc_adu', 
+              'zRecalc_adu', 'yRecalc_adu',
+              'uBulge_adu', 'gBulge_adu', 'rBulge_adu', 'iBulge_adu', 
+              'zBulge_adu', 'yBulge_adu',
+              'uDisk_adu', 'gDisk_adu', 'rDisk_adu', 'iDisk_adu', 'zDisk_adu', 
+              'yDisk_adu',
+              'uAgn_adu', 'gAgn_adu', 'rAgn_adu', 'iAgn_adu', 'zAgn_adu', 
+              'yAgn_adu')
+    def get_all_adu(self):
+        """
+        Getter for LSST galaxy magnitudes
+        
+        """
+        idNames = self.column_by_name('galid')
+        bandPassList = ['u','g','r','i','z','y']
+        return self.meta_magnitudes_getter(idNames, bandPassList, doMag = False)
     
     @compound('sdss_uRecalc', 'sdss_gRecalc', 'sdss_rRecalc', 
               'sdss_iRecalc', 'sdss_zRecalc',
