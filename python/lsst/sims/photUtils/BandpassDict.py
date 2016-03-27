@@ -8,6 +8,7 @@ from .Sed import Sed
 
 __all__ = ["BandpassDict"]
 
+
 class BandpassDict(object):
     """
     This class will wrap an OrderedDict of Bandpass instantiations.
@@ -42,7 +43,7 @@ class BandpassDict(object):
         for bandpassName, bandpass in zip(bandpassNameList, bandpassList):
 
             if bandpassName in self._bandpassDict:
-                raise RuntimeError("The bandpass %s occurs twice in your input " % bandpassName \
+                raise RuntimeError("The bandpass %s occurs twice in your input " % bandpassName
                                    + "to BandpassDict")
 
             self._bandpassDict[bandpassName] = copy.deepcopy(bandpass)
@@ -51,27 +52,21 @@ class BandpassDict(object):
         self._phiArray, self._wavelenStep = dummySed.setupPhiArray(self._bandpassDict.values())
         self._wavelen_match = self._bandpassDict.values()[0].wavelen
 
-
     def __getitem__(self, bandpass):
         return self._bandpassDict[bandpass]
 
-
     def __len__(self):
         return len(self._bandpassDict)
-
 
     def __iter__(self):
         for val in self._bandpassDict:
             yield val
 
-
     def values(self):
         return self._bandpassDict.values()
 
-
     def keys(self):
         return self._bandpassDict.keys()
-
 
     @classmethod
     def loadBandpassesFromFiles(cls,
@@ -81,7 +76,7 @@ class BandpassDict(object):
                                 componentList = ['detector.dat', 'm1.dat', 'm2.dat', 'm3.dat',
                                                  'lens1.dat', 'lens2.dat', 'lens3.dat'],
                                 atmoTransmission=os.path.join(getPackageDir('throughputs'),
-                                                              'baseline','atmos_std.dat')):
+                                                              'baseline', 'atmos_std.dat')):
         """
         Load bandpass information from files into BandpassDicts.
         This method will separate the bandpasses into contributions due to instrumentations
@@ -116,13 +111,13 @@ class BandpassDict(object):
 
         commonComponents = []
         for cc in componentList:
-            commonComponents.append(os.path.join(filedir,cc))
+            commonComponents.append(os.path.join(filedir, cc))
 
         bandpassList = []
         hardwareBandpassList = []
 
         for w in bandpassNames:
-            components = commonComponents + [os.path.join(filedir,"%s.dat" % (bandpassRoot +w))]
+            components = commonComponents + [os.path.join(filedir, "%s.dat" % (bandpassRoot + w))]
             bandpassDummy = Bandpass()
             bandpassDummy.readThroughputList(components)
             hardwareBandpassList.append(bandpassDummy)
@@ -132,18 +127,16 @@ class BandpassDict(object):
             bandpassDummy.readThroughputList(components)
             bandpassList.append(bandpassDummy)
 
-
         bandpassDict = cls(bandpassList, bandpassNames)
         hardwareBandpassDict = cls(hardwareBandpassList, bandpassNames)
 
         return bandpassDict, hardwareBandpassDict
 
-
     @classmethod
     def loadTotalBandpassesFromFiles(cls,
-                                    bandpassNames=['u', 'g', 'r', 'i', 'z', 'y'],
-                                    bandpassDir = os.path.join(getPackageDir('throughputs'),'baseline'),
-                                    bandpassRoot = 'total_'):
+                                     bandpassNames=['u', 'g', 'r', 'i', 'z', 'y'],
+                                     bandpassDir = os.path.join(getPackageDir('throughputs'), 'baseline'),
+                                     bandpassRoot = 'total_'):
         """
         This will take the list of band passes named by bandpassNames and load them into
         a BandpassDict
@@ -171,11 +164,10 @@ class BandpassDict(object):
 
         for w in bandpassNames:
             bandpassDummy = Bandpass()
-            bandpassDummy.readThroughput(os.path.join(bandpassDir,"%s.dat" % (bandpassRoot + w)))
+            bandpassDummy.readThroughput(os.path.join(bandpassDir, "%s.dat" % (bandpassRoot + w)))
             bandpassList.append(bandpassDummy)
 
         return cls(bandpassList, bandpassNames)
-
 
     def _magListForSed(self, sedobj, indices=None):
         """
@@ -190,13 +182,13 @@ class BandpassDict(object):
             return [numpy.NaN]*len(self._bandpassDict)
         else:
 
-            #for some reason, moving this call to flambdaTofnu()
-            #to a point earlier in the
-            #process results in some SEDs having 'None' for fnu.
+            # for some reason, moving this call to flambdaTofnu()
+            # to a point earlier in the
+            # process results in some SEDs having 'None' for fnu.
             #
-            #I looked more carefully at the documentation in Sed.py
-            #Any time you update flambda in any way, fnu gets set to 'None'
-            #This is to prevent the two arrays from getting out synch
+            # I looked more carefully at the documentation in Sed.py
+            # Any time you update flambda in any way, fnu gets set to 'None'
+            # This is to prevent the two arrays from getting out synch
             #(e.g. renormalizing flambda but forgettint to renormalize fnu)
             #
             sedobj.flambdaTofnu()
@@ -210,7 +202,6 @@ class BandpassDict(object):
                 outputList = sedobj.manyMagCalc(self._phiArray, self._wavelenStep)
 
             return outputList
-
 
     def magListForSed(self, sedobj, indices=None):
         """
@@ -244,7 +235,6 @@ class BandpassDict(object):
         else:
             return numpy.array([numpy.NaN]*len(self._bandpassDict))
 
-
     def magDictForSed(self, sedobj, indices=None):
         """
         Return an OrderedDict of magnitudes for a single Sed object.
@@ -271,7 +261,6 @@ class BandpassDict(object):
             outputDict[bp] = magList[ix]
 
         return outputDict
-
 
     def magListForSedList(self, sedList, indices=None):
         """
@@ -325,7 +314,6 @@ class BandpassDict(object):
 
         return numpy.array(output_list)
 
-
     def magArrayForSedList(self, sedList, indices=None):
         """
         Return a dtyped numpy array of magnitudes from a SedList.
@@ -363,7 +351,6 @@ class BandpassDict(object):
 
         return outputArray
 
-
     def _fluxListForSed(self, sedobj, indices=None):
         """
         This is a private method which will take an sedobj which has already
@@ -377,13 +364,13 @@ class BandpassDict(object):
             return [numpy.NaN]*len(self._bandpassDict)
         else:
 
-            #for some reason, moving this call to flambdaTofnu()
-            #to a point earlier in the
-            #process results in some SEDs having 'None' for fnu.
+            # for some reason, moving this call to flambdaTofnu()
+            # to a point earlier in the
+            # process results in some SEDs having 'None' for fnu.
             #
-            #I looked more carefully at the documentation in Sed.py
-            #Any time you update flambda in any way, fnu gets set to 'None'
-            #This is to prevent the two arrays from getting out synch
+            # I looked more carefully at the documentation in Sed.py
+            # Any time you update flambda in any way, fnu gets set to 'None'
+            # This is to prevent the two arrays from getting out synch
             #(e.g. renormalizing flambda but forgettint to renormalize fnu)
             #
             sedobj.flambdaTofnu()
@@ -397,7 +384,6 @@ class BandpassDict(object):
                 outputList = sedobj.manyFluxCalc(self._phiArray, self._wavelenStep)
 
             return outputList
-
 
     def fluxListForSed(self, sedobj, indices=None):
         """
@@ -436,7 +422,6 @@ class BandpassDict(object):
         else:
             return numpy.array([numpy.NaN]*len(self._bandpassDict))
 
-
     def fluxDictForSed(self, sedobj, indices=None):
         """
         Return an OrderedDict of fluxes for a single Sed object.
@@ -467,7 +452,6 @@ class BandpassDict(object):
             outputDict[bp] = fluxList[ix]
 
         return outputDict
-
 
     def fluxListForSedList(self, sedList, indices=None):
         """
@@ -526,7 +510,6 @@ class BandpassDict(object):
 
         return numpy.array(output_list)
 
-
     def fluxArrayForSedList(self, sedList, indices=None):
         """
         Return a dtyped numpy array of fluxes from a SedList.
@@ -571,7 +554,6 @@ class BandpassDict(object):
 
         return outputArray
 
-
     @property
     def phiArray(self):
         """
@@ -580,7 +562,6 @@ class BandpassDict(object):
         """
         return self._phiArray
 
-
     @property
     def wavelenStep(self):
         """
@@ -588,7 +569,6 @@ class BandpassDict(object):
         stored in this dict.
         """
         return self._wavelenStep
-
 
     @property
     def wavelenMatch(self):

@@ -8,7 +8,8 @@ import numpy
 from lsst.sims.photUtils import calcSkyCountsPerPixelForM5, Sed
 
 __all__ = ["setM5",
-          "comovingDistanceIntegrand", "cosmologicalOmega"]
+           "comovingDistanceIntegrand", "cosmologicalOmega"]
+
 
 def setM5(m5target, skysed, totalBandpass, hardware,
           photParams,
@@ -52,20 +53,20 @@ def setM5(m5target, skysed, totalBandpass, hardware,
     arcsecond in a given bandpass.
     """
 
-    #This is based on the LSST SNR document (v1.2, May 2010)
-    #www.astro.washington.edu/users/ivezic/Astr511/LSST_SNRdoc.pdf
+    # This is based on the LSST SNR document (v1.2, May 2010)
+    # www.astro.washington.edu/users/ivezic/Astr511/LSST_SNRdoc.pdf
 
     if FWHMeff is None:
         FWHMeff = LSSTdefaults().FWHMeff('r')
 
     skyCountsTarget = calcSkyCountsPerPixelForM5(m5target, totalBandpass, FWHMeff=FWHMeff,
-                                             photParams=photParams)
+                                                 photParams=photParams)
 
     skySedOut = Sed(wavelen=numpy.copy(skysed.wavelen),
                     flambda=numpy.copy(skysed.flambda))
 
     skyCounts = skySedOut.calcADU(hardware, photParams=photParams) \
-                    * photParams.platescale * photParams.platescale
+        * photParams.platescale * photParams.platescale
     skySedOut.multiplyFluxNorm(skyCountsTarget/skyCounts)
 
     return skySedOut
@@ -120,11 +121,12 @@ def cosmologicalOmega(redshift, H0, Om0, Ode0 = None, Og0=0.0, Onu0=0.0, w0=-1.0
     Ogz = Og0 * numpy.power(1.0+redshift, 4)
     Onuz = Onu0 * numpy.power(1.0+redshift, 4)
     Okz = Ok0 * numpy.power(1.0+redshift, 2)
-    Odez = Ode0 * numpy.exp(-3.0*(numpy.log(aa)*(w0 + wa +1.0) - wa*(aa - 1.0)))
+    Odez = Ode0 * numpy.exp(-3.0*(numpy.log(aa)*(w0 + wa + 1.0) - wa*(aa - 1.0)))
 
     Ototal = Omz + Ogz + Onuz + Odez + Okz
 
     return H0*numpy.sqrt(Ototal), Omz/Ototal, Odez/Ototal, Ogz/Ototal, Onuz/Ototal, Okz/Ototal
+
 
 def comovingDistanceIntegrand(redshift, H0, Om0, Ode0, Og0, Onu0, w0, wa):
     """
@@ -154,5 +156,5 @@ def comovingDistanceIntegrand(redshift, H0, Om0, Ode0, Og0, Onu0, w0, wa):
 
     """
     hh, mm, de, gg, nn, kk = cosmologicalOmega(redshift, H0, Om0, Ode0=Ode0,
-                                          Og0=Og0, Onu0=Onu0, w0=w0, wa=wa)
+                                               Og0=Og0, Onu0=Onu0, w0=w0, wa=wa)
     return 1.0/hh

@@ -23,7 +23,7 @@ ebvmax = 2
 ebvstep = (ebvmax - ebvmin)/float(len(starskeys))
 ebv = n.arange(ebvmin, ebvmax, ebvstep)
 
-# okay, instantiate the bandpass used to calculate the magnitude 
+# okay, instantiate the bandpass used to calculate the magnitude
 rband = Bandpass()
 rband.readThroughput("exampleBandpass.dat")
 
@@ -101,7 +101,7 @@ for i in range(len(starskeys)):
 
 print "#sedname mag_u  mag_g   mag_r   mag_i   mag_z   mag_y"
 for i in range(len(starskeys)):
-    print "%s  %.4f %.4f %.4f %.4f %.4f %.4f" %(starskeys[i], mags[i][0], mags[i][1],
-                                                mags[i][2], mags[i][3], mags[i][4],
-                                                mags[i][5])
+    print "%s  %.4f %.4f %.4f %.4f %.4f %.4f" % (starskeys[i], mags[i][0], mags[i][1],
+                                                 mags[i][2], mags[i][3], mags[i][4],
+                                                 mags[i][5])
 

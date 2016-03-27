@@ -12,10 +12,10 @@ from lsst.sims.photUtils import BandpassDict
 
 __all__ = ["readGalfast"]
 
+
 class readGalfast():
 
     def parseGalfast(self, headerLine):
-
         """
         Use galfast header line to organize input
 
@@ -96,9 +96,12 @@ class readGalfast():
             elif title == 'SDSSugrizPhotoFlags{class=flags;}':
                 galfastDict['SDSSPhotoFlags'] = colNo
                 colNo += 1
-            elif title == '#': pass
-            elif len(title) < 1: pass
-            elif title.isspace(): pass
+            elif title == '#':
+                pass
+            elif len(title) < 1:
+                pass
+            elif title.isspace():
+                pass
             else:
                 raise RuntimeError, '*** Unknown field: %s' % (title)
         return galfastDict
@@ -154,17 +157,17 @@ class readGalfast():
         """
 
         for filename in filenameList:
-            #Make sure input file exists and is readable format before doing anything else
+            # Make sure input file exists and is readable format before doing anything else
             if os.path.isfile(filename) == False:
                 raise RuntimeError, '*** File does not exist'
 
-            #Process various possible galfast outputs
+            # Process various possible galfast outputs
             if filename.endswith(('.txt', '.gz', '.fits')):
                 continue
             else:
                 raise RuntimeError, str('*** Unsupported File Format in file: ' + str(filename))
 
-        #If all files exist and are in proper formats then load seds
+        # If all files exist and are in proper formats then load seds
 
         selectStarSED0 = selectStarSED(sEDDir = sEDPath, kuruczDir = kuruczPath,
                                        mltDir = mltPath, wdDir = wdPath)
@@ -174,7 +177,7 @@ class readGalfast():
         else:
             kuruczList = selectStarSED0.loadKuruczSEDs(subset = kuruczSubset)
 
-        #Only need one dictionary since none of the names overlap
+        # Only need one dictionary since none of the names overlap
         positionDict = {}
         for kNum, kuruczSED in enumerate(kuruczList):
             positionDict[kuruczSED.name] = kNum
@@ -198,31 +201,31 @@ class readGalfast():
         for heNum, heSED in enumerate(wdListHE):
             positionDict[heSED.name] = heNum
 
-        #For adding/subtracting extinction when calculating colors
-        #Numbers below come from Schlafly and Finkbeiner (2011) (ApJ, 737, 103)
-        #normalized by SDSS r mag value
+        # For adding/subtracting extinction when calculating colors
+        # Numbers below come from Schlafly and Finkbeiner (2011) (ApJ, 737, 103)
+        # normalized by SDSS r mag value
         sdssExtCoeffs = [1.8551, 1.4455, 1.0, 0.7431, 0.5527]
         lsstExtCoeffs = [1.8140, 1.4166, 0.9947, 0.7370, 0.5790, 0.4761]
 
-        sdssPhot = BandpassDict.loadTotalBandpassesFromFiles(['u','g','r','i','z'],
-                                         bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),
-                                                                    'sdss'),
-                                         bandpassRoot = 'sdss_')
+        sdssPhot = BandpassDict.loadTotalBandpassesFromFiles(['u', 'g', 'r', 'i', 'z'],
+                                                             bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),
+                                                                                        'sdss'),
+                                                             bandpassRoot = 'sdss_')
 
-        #Load Bandpasses for LSST colors to get colors from matched SEDs
+        # Load Bandpasses for LSST colors to get colors from matched SEDs
         lsstFilterList = ('u', 'g', 'r', 'i', 'z', 'y')
         lsstPhot = BandpassDict.loadTotalBandpassesFromFiles(lsstFilterList)
         imSimBand = Bandpass()
         imSimBand.imsimBandpass()
 
-        #Calculate colors and add them to the SED objects
+        # Calculate colors and add them to the SED objects
         kuruczColors = selectStarSED0.calcBasicColors(kuruczList, sdssPhot)
         mltColors = selectStarSED0.calcBasicColors(mltList, sdssPhot)
         hColors = selectStarSED0.calcBasicColors(wdListH, sdssPhot)
         heColors = selectStarSED0.calcBasicColors(wdListHE, sdssPhot)
 
-        listDict = {'kurucz':kuruczList, 'mlt':mltList, 'H':wdListH, 'HE':wdListHE}
-        colorDict = {'kurucz':kuruczColors, 'mlt':mltColors, 'H':hColors, 'HE':heColors}
+        listDict = {'kurucz': kuruczList, 'mlt': mltList, 'H': wdListH, 'HE': wdListHE}
+        colorDict = {'kurucz': kuruczColors, 'mlt': mltColors, 'H': hColors, 'HE': heColors}
 
         for filename, outFile in zip(filenameList, outFileList):
             if filename.endswith('.txt'):
@@ -246,8 +249,8 @@ class readGalfast():
                 fOut = open(outFile, 'w')
             elif outFile.endswith('.gz'):
                 fOut = gzip.open(outFile, 'w')
-            fOut.write('#oID, ra, dec, gall, galb, coordX, coordY, coordZ, sEDName, magNorm, ' +\
-                       'LSSTugrizy, SDSSugriz, absSDSSr, pmRA, pmDec, vRad, pml, pmb, vRadlb, ' +\
+            fOut.write('#oID, ra, dec, gall, galb, coordX, coordY, coordZ, sEDName, magNorm, ' +
+                       'LSSTugrizy, SDSSugriz, absSDSSr, pmRA, pmDec, vRad, pml, pmb, vRadlb, ' +
                        'vR, vPhi, vZ, FeH, pop, distKpc, ebv, ebvInf\n')
             header_length = 0
             numChunks = 0
@@ -264,7 +267,7 @@ class readGalfast():
             print 'Total objects = %i' % (num_lines - header_length)
             numChunks = ((num_lines-header_length)/chunkSize) + 1
 
-            for chunk in range(0,numChunks):
+            for chunk in range(0, numChunks):
                 if chunk == numChunks-1:
                     lastChunkSize = (num_lines - header_length) % chunkSize
                     readSize = lastChunkSize
@@ -290,11 +293,11 @@ class readGalfast():
                 else:
                     if gzFile == False:
                         with open(filename) as t_in:
-                            starData = np.loadtxt(itertools.islice(t_in,((readSize*chunk)+header_length),
+                            starData = np.loadtxt(itertools.islice(t_in, ((readSize*chunk)+header_length),
                                                                    ((readSize*(chunk+1))+header_length)))
                     else:
                         with gzip.open(filename) as t_in:
-                            starData = np.loadtxt(itertools.islice(t_in,((readSize*chunk)+header_length),
+                            starData = np.loadtxt(itertools.islice(t_in, ((readSize*chunk)+header_length),
                                                                    ((readSize*(chunk+1))+header_length)))
                     starData = np.transpose(starData)
                     gall = starData[galfastDict['l']]
@@ -322,7 +325,7 @@ class readGalfast():
                     sDSS = np.transpose(starData[galfastDict['SDSSu']:galfastDict['SDSSz']+1])
                     sDSSPhotoFlags = starData[galfastDict['SDSSPhotoFlags']]
 
-                #End of input, now onto processing and output
+                # End of input, now onto processing and output
                 sDSSunred = selectStarSED0.deReddenMags(am, sDSS, sdssExtCoeffs)
                 if readSize == 1:
                     ra = np.array([ra])
@@ -334,8 +337,8 @@ class readGalfast():
                 is that for M and later stars, the effective surface temperature is low enough for
                 molecules to form, and their opacity is too complex to easily model, especially TiO)."
                 """
-                mIn = np.where(((pop < 10) | (pop >= 20)) & (sDSSunred[:,2] - sDSSunred[:,3] > 0.59))
-                kIn = np.where(((pop < 10) | (pop >= 20)) & (sDSSunred[:,2] - sDSSunred[:,3] <= 0.59))
+                mIn = np.where(((pop < 10) | (pop >= 20)) & (sDSSunred[:, 2] - sDSSunred[:, 3] > 0.59))
+                kIn = np.where(((pop < 10) | (pop >= 20)) & (sDSSunred[:, 2] - sDSSunred[:, 3] <= 0.59))
                 hIn = np.where((pop >= 10) & (pop < 15))
                 heIn = np.where((pop >= 15) & (pop < 20))
 
@@ -352,7 +355,7 @@ class readGalfast():
                                                                          reddening = False,
                                                                          colors = colorDict['H'])
                 sEDNameHE, magNormHE, matchErrorHE = selectStarSED0.findSED(listDict['HE'],
-                                                                            sDSSunred[heIn], 
+                                                                            sDSSunred[heIn],
                                                                             ra[heIn], dec[heIn],
                                                                             reddening = False,
                                                                             colors = colorDict['HE'])
@@ -377,7 +380,7 @@ class readGalfast():
                 chunkMagNorms[heIn] = magNormHE
                 chunkMatchErrors[heIn] = matchErrorHE
                 lsstMagsUnred = []
-                for sedName, sedType, magNorm, matchError in zip(chunkNames, chunkTypes, chunkMagNorms, 
+                for sedName, sedType, magNorm, matchError in zip(chunkNames, chunkTypes, chunkMagNorms,
                                                                  chunkMatchErrors):
                     testSED = Sed()
                     testSED.setSED(listDict[sedType][positionDict[sedName]].wavelen,
@@ -385,11 +388,11 @@ class readGalfast():
                     fluxNorm = testSED.calcFluxNorm(magNorm, imSimBand)
                     testSED.multiplyFluxNorm(fluxNorm)
                     lsstMagsUnred.append(lsstPhot.magListForSed(testSED))
-                #If the extinction value is negative then it will add the reddening back in
+                # If the extinction value is negative then it will add the reddening back in
                 lsstMags = selectStarSED0.deReddenMags((-1.0*am), lsstMagsUnred,
                                                        lsstExtCoeffs)
                 distKpc = self.convDMtoKpc(DM)
-                ebv = am / 2.285 #From Schlafly and Finkbeiner 2011, (ApJ, 737, 103)  for sdssr
+                ebv = am / 2.285  # From Schlafly and Finkbeiner 2011, (ApJ, 737, 103)  for sdssr
                 ebvInf = amInf / 2.285
                 for line in range(0, readSize):
                     outFmt = '%i,%3.7f,%3.7f,%3.7f,%3.7f,%3.7f,' +\
@@ -405,7 +408,7 @@ class readGalfast():
                         if inFits == True:
                             sDSS = sDSS[0]
                         outDat = (oID, ra[line], dec[line], gall, galb, coordX,
-                                  coordY, coordZ, chunkNames, 
+                                  coordY, coordZ, chunkNames,
                                   chunkMagNorms, chunkMatchErrors,
                                   lsstMags[line][0], lsstMags[line][1], lsstMags[line][2],
                                   lsstMags[line][3], lsstMags[line][4], lsstMags[line][5],
@@ -415,7 +418,7 @@ class readGalfast():
                                   FeH, pop, distKpc, ebv, ebvInf)
                     else:
                         outDat = (oID[line], ra[line], dec[line], gall[line], galb[line], coordX[line],
-                                  coordY[line], coordZ[line], chunkNames[line], 
+                                  coordY[line], coordZ[line], chunkNames[line],
                                   chunkMagNorms[line], chunkMatchErrors[line],
                                   lsstMags[line][0], lsstMags[line][1], lsstMags[line][2],
                                   lsstMags[line][3], lsstMags[line][4], lsstMags[line][5],

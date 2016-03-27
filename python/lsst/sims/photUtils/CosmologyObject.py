@@ -57,6 +57,7 @@ flatnessthresh = 1.0e-12
 
 __all__ = ["CosmologyObject"]
 
+
 class CosmologyObject(object):
 
     def __init__(self, H0=73.0, Om0=0.25, Ok0=None, w0=None, wa=None):
@@ -108,7 +109,7 @@ class CosmologyObject(object):
             wa = 0.0
 
         isCosmologicalConstant = False
-        if (w0 is None and wa is None) or (w0==-1.0 and wa==0.0):
+        if (w0 is None and wa is None) or (w0 == -1.0 and wa == 0.0):
             isCosmologicalConstant = True
 
         isFlat = False
@@ -119,13 +120,13 @@ class CosmologyObject(object):
             universe = cosmology.FlatLambdaCDM(H0=H0, Om0=Om0)
         elif isCosmologicalConstant:
             tmpmodel = cosmology.FlatLambdaCDM(H0=H0, Om0=Om0)
-            Ode0 = 1.0 - Om0 - tmpmodel.Ogamma0 - tmpmodel.Onu0 - Ok0 
+            Ode0 = 1.0 - Om0 - tmpmodel.Ogamma0 - tmpmodel.Onu0 - Ok0
             universe = cosmology.LambdaCDM(H0=H0, Om0=Om0, Ode0=Ode0)
         elif isFlat:
             universe = cosmology.Flatw0waCDM(H0=H0, Om0=Om0, w0=w0, wa=wa)
         else:
             tmpmodel = cosmology.Flatw0waCDM(H0=H0, Om0=Om0, w0=w0, wa=wa)
-            Ode0 = 1.0 - Om0 - tmpmodel.Ogamma0 - tmpmodel.Onu0 - Ok0 
+            Ode0 = 1.0 - Om0 - tmpmodel.Ogamma0 - tmpmodel.Onu0 - Ok0
 
             universe = cosmology.w0waCDM(H0=H0, Om0=Om0, Ode0=Ode0,
                                          w0=w0, wa=wa)
@@ -146,7 +147,8 @@ class CosmologyObject(object):
         elif 'set_current' in dir(cosmology):
             cosmology.set_current(universe)
         else:
-            raise RuntimeError("CosmologyObject.setCurrent does not know how to handle this version of astropy")
+            raise RuntimeError(
+                "CosmologyObject.setCurrent does not know how to handle this version of astropy")
 
         self.activeCosmology = universe
         self.setUnits()
@@ -348,17 +350,17 @@ class CosmologyObject(object):
         else:
             mod = mm
 
-        #The astropy.cosmology.distmod() method has no problem returning a negative
-        #distance modulus (or -inf if redshift==0.0)
-        #Given that this makes no sense, the code below forces all distance moduli
-        #to be greater than zero.
+        # The astropy.cosmology.distmod() method has no problem returning a negative
+        # distance modulus (or -inf if redshift==0.0)
+        # Given that this makes no sense, the code below forces all distance moduli
+        # to be greater than zero.
         #
-        #a Runtime Warning will be raised (because distmod will try to take the
-        #logarithm of luminosityDistance = 0, but the code will still run
+        # a Runtime Warning will be raised (because distmod will try to take the
+        # logarithm of luminosityDistance = 0, but the code will still run
         if isinstance(mod, float):
             if mod < 0.0:
-                 return  0.0
+                return 0.0
             else:
                 return mod
         else:
-            return numpy.where(mod>0.0, mod, 0.0)
+            return numpy.where(mod > 0.0, mod, 0.0)

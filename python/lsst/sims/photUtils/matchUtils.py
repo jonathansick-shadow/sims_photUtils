@@ -15,6 +15,7 @@ from lsst.sims.utils import SpecMap
 
 __all__ = ["matchBase", "matchStar", "matchGalaxy"]
 
+
 class matchBase():
 
     """
@@ -23,7 +24,6 @@ class matchBase():
 
     def calcMagNorm(self, objectMags, sedObj, bandpassDict, mag_error = None,
                     redshift = None, filtRange = None):
-
         """
         This will find the magNorm value that gives the closest match to the magnitudes of the object
         using the matched SED. Uses scipy.optimize.leastsq to find the values of fluxNorm that minimizes
@@ -57,8 +57,8 @@ class matchBase():
             sedTest.redshiftSED(redshift)
         imSimBand = Bandpass()
         imSimBand.imsimBandpass()
-        zp = -2.5*np.log10(3631)  #Note using default AB zeropoint
-        flux_obs = np.power(10,(objectMags + zp)/(-2.5))
+        zp = -2.5*np.log10(3631)  # Note using default AB zeropoint
+        flux_obs = np.power(10, (objectMags + zp)/(-2.5))
         sedTest.resampleSED(wavelen_match=bandpassDict.values()[0].wavelen)
         sedTest.flambdaTofnu()
         flux_model = sedTest.manyFluxCalc(bandpassDict.phiArray, bandpassDict.wavelenStep)
@@ -75,7 +75,6 @@ class matchBase():
         return bestMagNorm
 
     def calcBasicColors(self, sedList, bandpassDict, makeCopy = False):
-
         """
         This will calculate a set of colors from a list of SED objects when there is no need to redshift
         the SEDs.
@@ -96,7 +95,7 @@ class matchBase():
         modelColors = []
 
         for specObj in sedList:
-            if makeCopy==True:
+            if makeCopy == True:
                 fileSED = Sed()
                 fileSED.setSED(wavelen = specObj.wavelen, flambda = specObj.flambda)
                 sEDMags = bandpassDict.magListForSed(fileSED)
@@ -110,7 +109,6 @@ class matchBase():
         return modelColors
 
     def deReddenMags(self, ebvVals, catMags, extCoeffs):
-
         """
         This will correct for extinction effects in a set of catalog Magnitudes.
 
@@ -130,6 +128,7 @@ class matchBase():
 
         return deRedMags
 
+
 class matchStar(matchBase):
 
     """
@@ -139,7 +138,6 @@ class matchStar(matchBase):
     """
 
     def __init__(self, sEDDir = None, kuruczDir = None, mltDir = None, wdDir = None):
-
         """
         @param [in] sEDDir is a place to specify a different path to a directory that follows the same
         directory structure as SIMS_SED_LIBRARY. For instance, a different version of the LSST
@@ -161,10 +159,10 @@ class matchStar(matchBase):
             self.sEDDir = lsst.utils.getPackageDir('sims_sed_library')
         else:
             self.sEDDir = sEDDir
-        #Use SpecMap to pull the directory locations
+        # Use SpecMap to pull the directory locations
         specMap = SpecMap()
         specMapDict = {}
-        specFileStart = ['kp', 'burrows', 'bergeron'] #The beginning of filenames of different SED types
+        specFileStart = ['kp', 'burrows', 'bergeron']  # The beginning of filenames of different SED types
         specFileTypes = ['kurucz', 'mlt', 'wd']
         for specStart, specKey in zip(specFileStart, specFileTypes):
             for key, val in sorted(specMap.subdir_map.iteritems()):
@@ -241,7 +239,6 @@ class matchStar(matchBase):
         return sedList
 
     def loadmltSEDs(self, subset = None):
-
         """
         By default will load all seds in mlt directory. The user can also define a subset of
         what's in the directory and load only those SEDs instead. Will skip over extraneous
@@ -286,9 +283,7 @@ class matchStar(matchBase):
 
         return sedList
 
-
     def loadwdSEDs(self, subset = None):
-
         """
         By default will load all seds in wd directory. The user can also define a subset of
         what's in the directory and load only those SEDs instead. Will skip over extraneous
@@ -338,6 +333,7 @@ class matchStar(matchBase):
 
         return sedListH, sedListHE
 
+
 class matchGalaxy(matchBase):
 
     """
@@ -347,15 +343,14 @@ class matchGalaxy(matchBase):
     """
 
     def __init__(self, galDir = None):
-
         """
         @param [in] galDir is the directory where the galaxy SEDs are stored
         """
 
         if galDir is None:
-            #Use SpecMap to pull in directory's location in LSST Stack
+            # Use SpecMap to pull in directory's location in LSST Stack
             specMap = SpecMap()
-            specFileStart = 'Exp' #Start of sample BC03 name in sims_sed_library
+            specFileStart = 'Exp'  # Start of sample BC03 name in sims_sed_library
             for key, val in sorted(specMap.subdir_map.iteritems()):
                 if re.match(key, specFileStart):
                     galSpecDir = str(val)
@@ -364,7 +359,6 @@ class matchGalaxy(matchBase):
             self.galDir = galDir
 
     def loadBC03(self, subset = None):
-
         """
         This loads the Bruzual and Charlot SEDs that are currently in the SIMS_SED_LIBRARY.
         If the user wants to use different SEDs another loading method can be created and used in place
@@ -402,7 +396,7 @@ class matchGalaxy(matchBase):
                 spec.type = fileNameAsList[0]
                 spec.age = float(fileNameAsList[1])
                 metallicity = fileNameAsList[2].split('Z')[0]
-                #Final form is z/zSun
+                # Final form is z/zSun
                 spec.metallicity = float(metallicity) * (10 ** ((len(metallicity)-1)*-1))
 
             except:

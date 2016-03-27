@@ -2,7 +2,7 @@
 
 # CONCLUSION: don't  bother using bandpass's manyMagCalc function. Use Sed's instead.
 # the memory management required for bandpass's function seems to make it *slower* than doing the magnitude calculation
-# in the straight-forward manner. (actually, Bandpass's manyMagCalc function has been removed).  
+# in the straight-forward manner. (actually, Bandpass's manyMagCalc function has been removed).
 
 # Otherwise, the manyMagCalc function speeds up magnitude calculation by about 0.7 times
 #  (if the filter-by-filter magnitude calculation was done in a smart way, using the same wavelength grid
@@ -12,17 +12,19 @@
 
 # Note: if you did not pre-calculate the dust extinction and did not place the stars seds onto
 # the same wavelength grid as the bandpass before starting any calculations, this would increase
-# the time requirements. 
+# the time requirements.
 
 import os
 import random
 
-# Set up timing information and simple routine. 
+# Set up timing information and simple routine.
 import time
-def dtime(time_prev):
-   return (time.time() - time_prev, time.time())
 
-# Import other modules and classes. 
+
+def dtime(time_prev):
+    return (time.time() - time_prev, time.time())
+
+# Import other modules and classes.
 import numpy
 import lsst.sims.photUtils.Sed as Sed
 import lsst.sims.photUtils.Bandpass as Bandpass
@@ -30,7 +32,7 @@ import lsst.sims.photUtils.Bandpass as Bandpass
 # Initialize starting time.
 t = time.time()
 
-# Set the wavelength step for bandpasses. 
+# Set the wavelength step for bandpasses.
 wavelen_step = 0.1
 #wavelen_step = 0.25
 
@@ -42,9 +44,9 @@ for f in filterlist:
     lsstbp[f] = Bandpass()
     lsstbp[f].readThroughput(os.path.join(bpdir, 'total_'+f+'.dat'), wavelen_step=wavelen_step)
 dt, t = dtime(t)
-print "Reading %d filters took %f s" %(len(filterlist), dt)
+print "Reading %d filters took %f s" % (len(filterlist), dt)
 
-# Read in a set of star seds. 
+# Read in a set of star seds.
 # Replace stardir with your root galaxy sed directory.
 stardir = os.path.join(os.getenv('SIMS_SED_LIBRARY_DIR'), 'starSED/kurucz')
 stars = {}
@@ -54,10 +56,10 @@ if len(starlist) > 1000:
     starlist = random.sample(starlist, 1000)
 for star in starlist:
     stars[star] = Sed()
-    stars[star].readSED_flambda(os.path.join(stardir,star))
+    stars[star].readSED_flambda(os.path.join(stardir, star))
 
 dt, t = dtime(t)
-print "Reading %d star seds took %f s" %(len(starlist), dt)
+print "Reading %d star seds took %f s" % (len(starlist), dt)
 
 # Check on resampling - want all seds to have the same wavelength range and it can match the
 # bandpass wavelength grid because we're not redshifting the stars.
@@ -68,16 +70,17 @@ for star in starlist:
         resampled = True
 dt, t = dtime(t)
 if resampled:
-    print "Checking for (and doing) resampling took %f s" %(dt)
+    print "Checking for (and doing) resampling took %f s" % (dt)
 else:
-    print "Checking for (but not doing any) resampling took %f s" %(dt)
+    print "Checking for (but not doing any) resampling took %f s" % (dt)
 
 # Okay, now decide how many stars to include in this 'chunk'.
 # We will assign the star seds above randomly to each star within this chunk (to simulate getting
 # an sed name from the database), then add dust, and calculate the magnitude of the star in all
 # ugrizy bandpasses.  This is similar to the example_fastgals.py test, but will use
 # Bandpass.manyMagCalc as well as Sed.manyMagCalc (in two different magnitude calculations, as a test).
-# This assumes that you need to access the result as an array of u magnitudes, then an array of g magnitudes, etc.
+# This assumes that you need to access the result as an array of u
+# magnitudes, then an array of g magnitudes, etc.
 
 num_star = 10000
 ebv_mw = numpy.random.rand(num_star)  # random 0-1
@@ -86,7 +89,7 @@ star_name = numpy.array(star_name, dtype='int')
 fluxnorm = (numpy.random.rand(num_star) + 2) * 1e-14
 
 dt, t = dtime(t)
-print "Picking random numbers for dust/fluxnorm/sed id  took %f s" %(dt)
+print "Picking random numbers for dust/fluxnorm/sed id  took %f s" % (dt)
 
 # First - start 'regular' (but slightly slower) method of calculating magnitudes for stars, for comparison.
 # If you're only calculating magnitudes for a few stars, this might actually be just as fast and
@@ -96,17 +99,17 @@ print "Picking random numbers for dust/fluxnorm/sed id  took %f s" %(dt)
 # wavelen_step = 0.1 nm. (wavelen_step will have an impact on the speed difference).
 # There will be a difference in the speedup reported here vs. in example_fastgals.py primarily because the
 # galaxies require more calculations (which aren't part of manyMagCalc) and partly because we're using a different
-# optimization (bandpass.manyMagCalc instead of sed.manyMagCalc). 
+# optimization (bandpass.manyMagCalc instead of sed.manyMagCalc).
 
 # Start 'regular' magnitude calculation.
 
 # Calculate dust extinction a_x and b_x vectors.
 a_mw, b_mw = stars[starlist[0]].setupCCMab()
-# Set up dictionary + arrays to hold calculated magnitude information. 
+# Set up dictionary + arrays to hold calculated magnitude information.
 mags1 = {}
 for f in filterlist:
     mags1[f] = numpy.zeros(num_star, dtype='float')
-# For each star (in num_star's), apply apply MW dust, fluxnorm & calculate mags. 
+# For each star (in num_star's), apply apply MW dust, fluxnorm & calculate mags.
 for i in range(num_star):
     starname = starlist[star_name[i]]
     tmpstar = Sed(wavelen=stars[starname].wavelen, flambda=stars[starname].flambda)
@@ -119,25 +122,25 @@ for i in range(num_star):
         mags1[f][i] = tmpstar.calcMag(lsstbp[f])
 dt, t = dtime(t)
 print "Calculating dust/fluxnorm/%d magnitudes with some smart usage for %d stars took %f s" \
-      %(len(filterlist), num_star, dt)
+      % (len(filterlist), num_star, dt)
 
 
-# Test Sed.manyMagCalc : 
+# Test Sed.manyMagCalc :
 
 # First: (re) calculate internal a/b on wavelength range required for dust extinction.
-a_mw, b_mw = stars[starlist[0]].setupCCMab()  
-# Also: set up phi for each bandpass - ahead of time. And set up a list of bandpasses, then create phiarray 
+a_mw, b_mw = stars[starlist[0]].setupCCMab()
+# Also: set up phi for each bandpass - ahead of time. And set up a list of bandpasses, then create phiarray
 # and dlambda to set up for manyMagCalc method.
 bplist = []
 for f in filterlist:
     lsstbp[f].sbTophi()
     bplist.append(lsstbp[f])
 phiarray, dlambda = stars[starlist[0]].setupPhiArray(bplist)
-# Set up dictionary + arrays to hold calculated magnitude information. 
+# Set up dictionary + arrays to hold calculated magnitude information.
 mags2 = {}
 for f in filterlist:
     mags2[f] = numpy.zeros(num_star, dtype='float')
-# For each star (in num_star's), apply MW dust, fluxnorm, and then calculate mags using manyMagCalc. 
+# For each star (in num_star's), apply MW dust, fluxnorm, and then calculate mags using manyMagCalc.
 for i in range(num_star):
     starname = starlist[star_name[i]]
     tmpstar = Sed(wavelen=stars[starname].wavelen, flambda=stars[starname].flambda)
@@ -150,7 +153,7 @@ for i in range(num_star):
         j = j+1
 dt, t = dtime(t)
 print "Calculating dust/fluxnorm/%d magnitudes for %d stars optimized with Sed.manyMagCalc took %f s" \
-      %(len(filterlist), num_star, dt)
+      % (len(filterlist), num_star, dt)
 
 
 """
@@ -261,22 +264,22 @@ diff1 = {}
 for f in filterlist:
     flags = numpy.isfinite(mags1[f])
     if (flags.any() == 'False'):
-        print "Found %d finite magnitudes out of %d in non-optimized mags %s" %(len(flags[0]), len(mags1[f]), f)
+        print "Found %d finite magnitudes out of %d in non-optimized mags %s" % (len(flags[0]), len(mags1[f]), f)
     flags = numpy.isfinite(mags2[f])
     if (flags.any() == 'False'):
-        print "Found %d finite magnitudes out of %d in optimized mags2 %s" %(len(flags[0]), len(mags2[f]), f)
+        print "Found %d finite magnitudes out of %d in optimized mags2 %s" % (len(flags[0]), len(mags2[f]), f)
     #flags = numpy.isfinite(mags3[f])
-    #if (flags.any() == 'False'):
+    # if (flags.any() == 'False'):
     #    print "Found %d finite magnitudes out of %d in optimized mags3 %s" %(len(flags[0]), len(mags3[f]), f)
     diff1[f] = numpy.zeros(num_star, dtype='float')
     #diff2[f] = numpy.zeros(num_star, dtype='float')
     diff1[f] = numpy.abs(mags1[f] - mags2[f])
     #diff2[f] = numpy.abs(mags1[f] - mags3[f])
-    print "In ", f, " mags2 max :", diff1[f].max()#, " mags3 max: ", diff2[f].max()
+    print "In ", f, " mags2 max :", diff1[f].max()  # , " mags3 max: ", diff2[f].max()
     #condition  = (diff1[f]>0.01)
-    #print f, diff1[f][condition], mags1[f][condition], mags2[f][condition]
+    # print f, diff1[f][condition], mags1[f][condition], mags2[f][condition]
     #condition  = (diff2[f]>0.01)
-    #print f, diff2[f][condition], mags1[f][condition], mags3[f][condition]
+    # print f, diff2[f][condition], mags1[f][condition], mags3[f][condition]
     pylab.plot(mags1[f], mags2[f], colors[i]+'+')
     #pylab.plot(mags1[f], mags3[f], colors[i]+"x")
     i = i + 1

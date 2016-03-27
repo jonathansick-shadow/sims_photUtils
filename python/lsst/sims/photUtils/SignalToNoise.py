@@ -5,8 +5,9 @@ import LSSTdefaults
 
 __all__ = ["FWHMeff2FWHMgeom", "FWHMgeom2FWHMeff",
            "calcNeff", "calcInstrNoiseSq", "calcTotalNonSourceNoiseSq", "calcSNR_sed",
-          "calcM5", "calcSkyCountsPerPixelForM5", "calcGamma", "calcSNR_m5",
-          "calcAstrometricError", "magErrorFromSNR", "calcMagError_m5", "calcMagError_sed"]
+           "calcM5", "calcSkyCountsPerPixelForM5", "calcGamma", "calcSNR_m5",
+           "calcAstrometricError", "magErrorFromSNR", "calcMagError_m5", "calcMagError_sed"]
+
 
 def FWHMeff2FWHMgeom(FWHMeff):
     """
@@ -20,6 +21,7 @@ def FWHMeff2FWHMgeom(FWHMeff):
     FWHMgeom = 0.822*FWHMeff + 0.052
     return FWHMgeom
 
+
 def FWHMgeom2FWHMeff(FWHMgeom):
     """
     Convert FWHMgeom to FWHMeff.
@@ -31,6 +33,7 @@ def FWHMgeom2FWHMeff(FWHMgeom):
     """
     FWHMeff = (FWHMgeom - 0.052)/0.822
     return FWHMeff
+
 
 def calcNeff(FWHMeff, platescale):
     """
@@ -69,8 +72,8 @@ def calcInstrNoiseSq(photParams):
 
     # instrumental squared noise in electrons
     instNoiseSq = photParams.nexp*photParams.readnoise**2 + \
-                  photParams.darkcurrent*photParams.exptime*photParams.nexp + \
-                  photParams.nexp*photParams.othernoise**2
+        photParams.darkcurrent*photParams.exptime*photParams.nexp + \
+        photParams.nexp*photParams.othernoise**2
 
     # convert to ADU counts
     instNoiseSq = instNoiseSq/(photParams.gain*photParams.gain)
@@ -110,7 +113,7 @@ def calcTotalNonSourceNoiseSq(skySed, hardwarebandpass, photParams, FWHMeff):
     # square arc second, and we need to convert to counts per pixel.
 
     skycounts = skySed.calcADU(hardwarebandpass, photParams=photParams) \
-                * photParams.platescale * photParams.platescale
+        * photParams.platescale * photParams.platescale
 
     # Calculate the square of the noise due to instrumental effects.
     # Include the readout noise as many times as there are exposures
@@ -233,7 +236,7 @@ def calcM5(skysed, totalBandpass, hardware, photParams, FWHMeff=None):
     v_n = calcTotalNonSourceNoiseSq(skysed, hardware, photParams, FWHMeff)
 
     counts_5sigma = (snr**2)/2.0/photParams.gain + \
-                     numpy.sqrt((snr**4)/4.0/photParams.gain + (snr**2)*v_n)
+        numpy.sqrt((snr**4)/4.0/photParams.gain + (snr**2)*v_n)
 
     # renormalize flatsource so that it has the required counts to be a 5-sigma detection
     # given the specified background
@@ -254,12 +257,11 @@ def magErrorFromSNR(snr):
     @param [out] the resulting error in magnitude
     """
 
-    #see www.ucolick.org/~bolte/AY257/s_n.pdf section 3.1
+    # see www.ucolick.org/~bolte/AY257/s_n.pdf section 3.1
     return 2.5*numpy.log10(1.0+1.0/snr)
 
 
 def calcGamma(bandpass, m5, photParams):
-
     """
     Calculate the gamma parameter used for determining photometric
     signal to noise in equation 5 of the LSST overview paper
@@ -390,13 +392,13 @@ def calcMagError_m5(magnitude, bandpass, m5, photParams, gamma=None):
     snr, gamma = calcSNR_m5(magnitude, bandpass, m5, photParams, gamma=gamma)
 
     if photParams.sigmaSys is not None:
-        return numpy.sqrt(numpy.power(magErrorFromSNR(snr),2) + numpy.power(photParams.sigmaSys,2)), gamma
+        return numpy.sqrt(numpy.power(magErrorFromSNR(snr), 2) + numpy.power(photParams.sigmaSys, 2)), gamma
     else:
         return magErrorFromSNR(snr), gamma
 
 
 def calcSNR_sed(sourceSed, totalbandpass, skysed, hardwarebandpass,
-                    photParams, FWHMeff, verbose=False):
+                photParams, FWHMeff, verbose=False):
     """
     Calculate the signal to noise ratio for a source, given the bandpass(es) and sky SED.
 
@@ -446,18 +448,18 @@ def calcSNR_sed(sourceSed, totalbandpass, skysed, hardwarebandpass,
         noise_instr_sq = calcInstrNoiseSq(photParams)
 
         print "For Nexp %.1f of time %.1f: " % (photParams.nexp, photParams.exptime)
-        print "Counts from source: %.2f  Counts from sky: %.2f" %(sourcecounts, skycounts)
-        print "FWHMeff: %.2f('')  Neff pixels: %.3f(pix)" %(FWHMeff, neff)
+        print "Counts from source: %.2f  Counts from sky: %.2f" % (sourcecounts, skycounts)
+        print "FWHMeff: %.2f('')  Neff pixels: %.3f(pix)" % (FWHMeff, neff)
         print "Noise from sky: %.2f Noise from instrument: %.2f" \
-            %(numpy.sqrt(noise_sky_sq), numpy.sqrt(noise_instr_sq))
-        print "Noise from source: %.2f" %(numpy.sqrt(noise_source_sq))
-        print " Total Signal: %.2f   Total Noise: %.2f    SNR: %.2f" %(sourcecounts, noise, snr)
+            % (numpy.sqrt(noise_sky_sq), numpy.sqrt(noise_instr_sq))
+        print "Noise from source: %.2f" % (numpy.sqrt(noise_source_sq))
+        print " Total Signal: %.2f   Total Noise: %.2f    SNR: %.2f" % (sourcecounts, noise, snr)
         # Return the signal to noise value.
     return snr
 
 
 def calcMagError_sed(sourceSed, totalbandpass, skysed, hardwarebandpass,
-                    photParams, FWHMeff, verbose=False):
+                     photParams, FWHMeff, verbose=False):
     """
     Calculate the magnitudeError for a source, given the bandpass(es) and sky SED.
 
@@ -492,7 +494,7 @@ def calcMagError_sed(sourceSed, totalbandpass, skysed, hardwarebandpass,
                       photParams, FWHMeff, verbose=verbose)
 
     if photParams.sigmaSys is not None:
-        return numpy.sqrt(numpy.power(magErrorFromSNR(snr),2) + numpy.power(photParams.sigmaSys,2))
+        return numpy.sqrt(numpy.power(magErrorFromSNR(snr), 2) + numpy.power(photParams.sigmaSys, 2))
     else:
         return magErrorFromSNR(snr)
 
@@ -517,9 +519,9 @@ def calcAstrometricError(mag, m5, nvisit=1):
     # The systematic error floor in astrometry:
     error_sys = 10.0
     # These next few lines are the code removed due to Zeljko's 'be conservative' requirement.
-    #if (nvisit<30):
+    # if (nvisit<30):
     #    error_sys = error_sys/numpy.sqrt(nvisit/2.0)
-    #if (nvisit>30):
+    # if (nvisit>30):
     #    error_sys = error_sys/numpy.sqrt(nvisit)
     astrom_error = numpy.sqrt(error_sys * error_sys + error_rand*error_rand)
     return astrom_error

@@ -9,6 +9,7 @@ from .EBV import EBVbase as ebv
 
 __all__ = ["selectStarSED"]
 
+
 class selectStarSED(matchStar):
 
     """
@@ -18,7 +19,6 @@ class selectStarSED(matchStar):
     def findSED(self, sedList, catMags, catRA = None, catDec = None, mag_error = None,
                 reddening = True, bandpassDict = None, colors = None, nullValues = None,
                 extCoeffs = (4.239, 3.303, 2.285, 1.698, 1.263), makeCopy = False, verbose=True):
-
         """
         This will find the SEDs that are the closest match to the magnitudes of a star catalog.
         It can also correct for reddening from within the milky way. Objects without magnitudes in at least
@@ -75,10 +75,10 @@ class selectStarSED(matchStar):
         """
 
         if bandpassDict is None:
-            starPhot = BandpassDict.loadTotalBandpassesFromFiles(['u','g','r','i','z'],
-                                            bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),
-                                                                       'sdss'),
-                                            bandpassRoot = 'sdss_')
+            starPhot = BandpassDict.loadTotalBandpassesFromFiles(['u', 'g', 'r', 'i', 'z'],
+                                                                 bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),
+                                                                                            'sdss'),
+                                                                 bandpassRoot = 'sdss_')
         else:
             starPhot = bandpassDict
 
@@ -86,22 +86,22 @@ class selectStarSED(matchStar):
             modelColors = self.calcBasicColors(sedList, starPhot, makeCopy=makeCopy)
         else:
             modelColors = colors
-        #Transpose so that all values for one color are in one row as needed for the matching loop below
+        # Transpose so that all values for one color are in one row as needed for the matching loop below
         modelColors = np.transpose(modelColors)
 
-        #Set null values to nan so that we will skip them below
+        # Set null values to nan so that we will skip them below
         if nullValues is not None:
             catMags[np.where(catMags == nullValues)] = np.nan
 
         if reddening == True:
-            #Check that catRA and catDec are included
+            # Check that catRA and catDec are included
             if catRA is None or catDec is None:
                 raise RuntimeError("Reddening is True, but catRA and catDec are not included.")
             calcEBV = ebv()
-            raDec = np.array((catRA,catDec))
-            #If only matching one object need to reshape for calculateEbv
+            raDec = np.array((catRA, catDec))
+            # If only matching one object need to reshape for calculateEbv
             if len(raDec.shape) == 1:
-                raDec = raDec.reshape((2,1))
+                raDec = raDec.reshape((2, 1))
             ebvVals = calcEBV.calculateEbv(equatorialCoordinates = raDec)
             objMags = self.deReddenMags(ebvVals, catMags, extCoeffs)
         else:
@@ -123,12 +123,12 @@ class selectStarSED(matchStar):
         matchErrors = []
 
         for catObject in matchColors:
-            #This is done to handle objects with incomplete magnitude data
+            # This is done to handle objects with incomplete magnitude data
             colorRange = np.arange(0, len(starPhot)-1)
             filtNums = np.arange(0, len(starPhot))
-            if np.isnan(np.amin(catObject))==True:
-                colorRange = np.where(np.isnan(catObject)==False)[0]
-                filtNums = np.unique([colorRange, colorRange+1]) #Pick right filters in calcMagNorm
+            if np.isnan(np.amin(catObject)) == True:
+                colorRange = np.where(np.isnan(catObject) == False)[0]
+                filtNums = np.unique([colorRange, colorRange+1])  # Pick right filters in calcMagNorm
             if len(colorRange) == 0:
                 if verbose == True:
                     print 'Could not match object #%i. No magnitudes for two adjacent bandpasses.' % (numOn)
@@ -139,13 +139,13 @@ class selectStarSED(matchStar):
             else:
                 distanceArray = np.zeros(len(sedList))
                 for colorNum in colorRange:
-                    distanceArray += np.power((modelColors[colorNum] - catObject[colorNum]),2)
+                    distanceArray += np.power((modelColors[colorNum] - catObject[colorNum]), 2)
                 matchedSEDNum = np.nanargmin(distanceArray)
                 sedMatches.append(sedList[matchedSEDNum].name)
                 magNorm = self.calcMagNorm(objMags[numOn], sedList[matchedSEDNum],
                                            starPhot, filtRange = filtNums)
                 magNormMatches.append(magNorm)
-                matchErrors.append(distanceArray[matchedSEDNum]/len(colorRange)) #Mean Squared Error
+                matchErrors.append(distanceArray[matchedSEDNum]/len(colorRange))  # Mean Squared Error
             numOn += 1
             if numOn % 10000 == 0:
                 print 'Matched %i of %i catalog objects to SEDs' % (numOn-notMatched, numCatMags)

@@ -8,7 +8,9 @@ import lsst.sims.photUtils.Sed as Sed
 import lsst.sims.photUtils.Bandpass as Bandpass
 from lsst.sims.photUtils import PhotometricParameters
 
+
 class TestSedWavelenLimits(unittest.TestCase):
+
     def setUp(self):
         warnings.simplefilter('always')
         self.wmin = 500
@@ -42,7 +44,8 @@ class TestSedWavelenLimits(unittest.TestCase):
         print ''
         # Test that no warning is made.
         with warnings.catch_warnings(record=True) as wa:
-            w,f = testsed.resampleSED(wavelen_match=self.testbandpass.wavelen, wavelen=testsed.wavelen, flux=testsed.flambda)
+            w, f = testsed.resampleSED(wavelen_match=self.testbandpass.wavelen,
+                                       wavelen=testsed.wavelen, flux=testsed.flambda)
             self.assertEqual(len(wa), 0)
         np.testing.assert_equal(w, testsed.wavelen)
         np.testing.assert_equal(f, testsed.flambda)
@@ -92,6 +95,7 @@ class TestSedWavelenLimits(unittest.TestCase):
 
 
 class TestSedName(unittest.TestCase):
+
     def setUp(self):
         self.wmin = 500
         self.wmax = 1500
@@ -105,7 +109,6 @@ class TestSedName(unittest.TestCase):
         del self.name
         del self.testsed
 
-
     def testSetName(self):
         self.assertEqual(self.testsed.name, self.name)
 
@@ -113,7 +116,7 @@ class TestSedName(unittest.TestCase):
         testsed = Sed(self.testsed.wavelen, self.testsed.flambda, name=self.testsed.name)
         redshift = .2
         testsed.redshiftSED(redshift=redshift)
-        newname = testsed.name + '_Z' + '%.2f' %(redshift)
+        newname = testsed.name + '_Z' + '%.2f' % (redshift)
         testsed.name = newname
         self.assertEqual(testsed.name, newname)
 
@@ -125,8 +128,9 @@ def suite():
     suites += unittest.makeSuite(TestSedName)
     return unittest.TestSuite(suites)
 
+
 def run(shouldExit = False):
-    utilsTests.run(suite(),shouldExit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

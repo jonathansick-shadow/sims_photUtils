@@ -2,6 +2,7 @@ import numpy
 
 __all__ = ["PhotometricParameters"]
 
+
 class DefaultPhotometricParameters:
     """
     This class will just contain a bunch of dict which store
@@ -29,12 +30,12 @@ class DefaultPhotometricParameters:
     bandpassNames = ['u', 'g', 'r', 'i', 'z', 'y', 'any']
 
     # exposure time in seconds
-    exptime = {'u':15.0, 'g':15.0, 'r':15.0, 'i':15.0, 'z':15.0, 'y':15.0,
-               'any':15.0}
+    exptime = {'u': 15.0, 'g': 15.0, 'r': 15.0, 'i': 15.0, 'z': 15.0, 'y': 15.0,
+               'any': 15.0}
 
     # number of exposures
-    nexp = {'u':2, 'g':2, 'r':2, 'i':2, 'z':2, 'y':2,
-            'any':2}
+    nexp = {'u': 2, 'g': 2, 'r': 2, 'i': 2, 'z': 2, 'y': 2,
+            'any': 2}
 
     # effective area in cm^2
     effarea = {'u': 3.31830724e5,
@@ -46,30 +47,30 @@ class DefaultPhotometricParameters:
                'any': 3.31830724e5}
 
     # electrons per ADU
-    gain = {'u':2.3, 'g':2.3, 'r':2.3, 'i':2.3, 'z':2.3, 'y':2.3,
-            'any':2.3}
+    gain = {'u': 2.3, 'g': 2.3, 'r': 2.3, 'i': 2.3, 'z': 2.3, 'y': 2.3,
+            'any': 2.3}
 
     # electrons per pixel per exposure
-    readnoise = {'u':5.0, 'g':5.0, 'r':5.0, 'i':5.0, 'z':5.0, 'y':5.0,
-                 'any':5.0}
+    readnoise = {'u': 5.0, 'g': 5.0, 'r': 5.0, 'i': 5.0, 'z': 5.0, 'y': 5.0,
+                 'any': 5.0}
 
     # electrons per pixel per second
-    darkcurrent = {'u':0.2, 'g':0.2, 'r':0.2, 'i':0.2, 'z':0.2, 'y':0.2,
-                   'any':0.2}
+    darkcurrent = {'u': 0.2, 'g': 0.2, 'r': 0.2, 'i': 0.2, 'z': 0.2, 'y': 0.2,
+                   'any': 0.2}
 
     # electrons per pixel per exposure
-    othernoise = {'u':4.69, 'g':4.69, 'r':4.69, 'i':4.69, 'z':4.69, 'y':4.69,
-                  'any':4.69}
+    othernoise = {'u': 4.69, 'g': 4.69, 'r': 4.69, 'i': 4.69, 'z': 4.69, 'y': 4.69,
+                  'any': 4.69}
 
     # arcseconds per pixel
-    platescale = {'u':0.2, 'g':0.2, 'r':0.2, 'i':0.2, 'z':0.2, 'y':0.2,
-                  'any':0.2}
+    platescale = {'u': 0.2, 'g': 0.2, 'r': 0.2, 'i': 0.2, 'z': 0.2, 'y': 0.2,
+                  'any': 0.2}
 
     # systematic squared error in magnitudes
     # see Table 14 of the SRD document
     # https://docushare.lsstcorp.org/docushare/dsweb/Get/LPM-17
-    sigmaSys = {'u':0.0075, 'g':0.005, 'r':0.005, 'i':0.005, 'z':0.0075, 'y':0.0075,
-                'any':0.005}
+    sigmaSys = {'u': 0.0075, 'g': 0.005, 'r': 0.005, 'i': 0.005, 'z': 0.0075, 'y': 0.0075,
+                'any': 0.005}
 
 
 class PhotometricParameters(object):
@@ -84,7 +85,6 @@ class PhotometricParameters(object):
                  platescale=None,
                  sigmaSys=None,
                  bandpass=None):
-
         """
         @param [in] exptime exposure time in seconds (defaults to LSST value)
 
@@ -206,7 +206,7 @@ class PhotometricParameters(object):
 
         if self._platescale is None:
             failureMessage += 'did not set platescale\n'
-            failureCt +=1
+            failureCt += 1
 
         if self._sigmaSys is None:
             failureMessage += 'did not set sigmaSys\n'
@@ -218,16 +218,14 @@ class PhotometricParameters(object):
 
         if self._darkcurrent is None:
             failureMessage += 'did not set darkcurrent\n'
-            failureCt +=1
+            failureCt += 1
 
         if self._othernoise is None:
             failureMessage += 'did not set othernoise\n'
             failureCt += 1
 
-        if failureCt>0:
+        if failureCt > 0:
             raise RuntimeError('In PhotometricParameters:\n%s' % failureMessage)
-
-
 
     @property
     def bandpass(self):
@@ -253,7 +251,6 @@ class PhotometricParameters(object):
         raise RuntimeError("You should not be setting exptime on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
 
-
     @property
     def nexp(self):
         """
@@ -265,7 +262,6 @@ class PhotometricParameters(object):
     def nexp(self, value):
         raise RuntimeError("You should not be setting nexp on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
-
 
     @property
     def effarea(self):
@@ -279,7 +275,6 @@ class PhotometricParameters(object):
         raise RuntimeError("You should not be setting effarea on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
 
-
     @property
     def gain(self):
         """
@@ -291,7 +286,6 @@ class PhotometricParameters(object):
     def gain(self, value):
         raise RuntimeError("You should not be setting gain on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
-
 
     @property
     def platescale(self):
@@ -305,7 +299,6 @@ class PhotometricParameters(object):
         raise RuntimeError("You should not be setting platescale on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
 
-
     @property
     def readnoise(self):
         """
@@ -317,7 +310,6 @@ class PhotometricParameters(object):
     def readnoise(self, value):
         raise RuntimeError("You should not be setting readnoise on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
-
 
     @property
     def darkcurrent(self):
@@ -331,7 +323,6 @@ class PhotometricParameters(object):
         raise RuntimeError("You should not be setting darkcurrent on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
 
-
     @property
     def othernoise(self):
         """
@@ -340,10 +331,9 @@ class PhotometricParameters(object):
         return self._othernoise
 
     @othernoise.setter
-    def othernoise(self,value):
+    def othernoise(self, value):
         raise RuntimeError("You should not be setting othernoise on the fly; " +
                            "Just instantiate a new case of PhotometricParameters")
-
 
     @property
     def sigmaSys(self):
@@ -351,7 +341,6 @@ class PhotometricParameters(object):
         systematic error in magnitudes
         """
         return self._sigmaSys
-
 
     @sigmaSys.setter
     def sigmaSys(self, value):

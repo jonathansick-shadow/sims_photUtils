@@ -35,7 +35,7 @@ redshiftmax = 1.5
 redshiftstep = (redshiftmax - redshiftmin)/float(len(galaxykeys))
 redshifts = n.arange(redshiftmin, redshiftmax, redshiftstep)
 
-# okay, instantiate the bandpass used to calculate the magnitude 
+# okay, instantiate the bandpass used to calculate the magnitude
 rband = Bandpass()
 rband.readThroughput("exampleBandpass.dat")
 
@@ -59,7 +59,7 @@ for key in galaxykeys:
 
 # now for galaxies, we have to do (a) multiply the fluxnorm, (b) add the dust internal to
 #  the galaxy, (c) redshift the galaxy (d) add the dust from the milky way.
-# Note that step (a) can be done at any time, but b-c-d must be done in order. 
+# Note that step (a) can be done at any time, but b-c-d must be done in order.
 
 # create the a,b arrays for all the gals (because we resampled the gals onto the
 #  same wavelength range we can just calculate a/b once, and this is slow)
@@ -89,5 +89,5 @@ for i in range(len(galaxykeys)):
 # show results
 print "#sedname      fluxnorm     redshift  ebv_gal   ebv_mw  magnitude "
 for i in range(len(galaxykeys)):
-    print "%s %.5g  %.3f %.5f %.5f %.5f" %(galaxykeys[i], fluxnorm[i], redshifts[i], ebv_gal[i], ebv_mw[i], mags[i])
-    
+    print "%s %.5g  %.3f %.5f %.5f %.5f" % (galaxykeys[i], fluxnorm[i], redshifts[i], ebv_gal[i], ebv_mw[i], mags[i])
+

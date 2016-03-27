@@ -9,6 +9,7 @@ from .EBV import EBVbase as ebv
 
 __all__ = ["selectGalaxySED"]
 
+
 class selectGalaxySED(matchGalaxy):
 
     """
@@ -16,7 +17,6 @@ class selectGalaxySED(matchGalaxy):
     """
 
     def matchToRestFrame(self, sedList, catMags, mag_error = None, bandpassDict = None, makeCopy = False):
-
         """
         This will find the closest match to the magnitudes of a galaxy catalog if those magnitudes are in
         the rest frame. Objects without magnitudes in at least two adjacent bandpasses will return as none
@@ -47,11 +47,12 @@ class selectGalaxySED(matchGalaxy):
         the colors of the matched SED.
         """
 
-        #Set up photometry to calculate model Mags
+        # Set up photometry to calculate model Mags
         if bandpassDict is None:
-            galPhot = BandpassDict.loadTotalBandpassesFromFiles(['u','g','r','i','z'],
-                                            bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),'sdss'),
-                                            bandpassRoot = 'sdss_')
+            galPhot = BandpassDict.loadTotalBandpassesFromFiles(['u', 'g', 'r', 'i', 'z'],
+                                                                bandpassDir = os.path.join(
+                                                                    lsst.utils.getPackageDir('throughputs'), 'sdss'),
+                                                                bandpassRoot = 'sdss_')
         else:
             galPhot = bandpassDict
 
@@ -59,11 +60,11 @@ class selectGalaxySED(matchGalaxy):
         sedMatches = []
         magNormMatches = []
 
-        #Find the colors for all model SEDs
+        # Find the colors for all model SEDs
         modelColors = self.calcBasicColors(sedList, galPhot, makeCopy = makeCopy)
         modelColors = np.transpose(modelColors)
 
-        #Match the catalog colors to models
+        # Match the catalog colors to models
         numCatMags = len(catMags)
         numOn = 0
         notMatched = 0
@@ -76,12 +77,12 @@ class selectGalaxySED(matchGalaxy):
         matchColors = np.transpose(matchColors)
 
         for catObject in matchColors:
-            #This is done to handle objects with incomplete magnitude data
+            # This is done to handle objects with incomplete magnitude data
             colorRange = np.arange(0, len(galPhot)-1)
             filtNums = np.arange(0, len(galPhot))
-            if np.isnan(np.amin(catObject))==True:
-                colorRange = np.where(np.isnan(catObject)==False)[0]
-                filtNums = np.unique([colorRange, colorRange+1]) #To pick out right filters in calcMagNorm
+            if np.isnan(np.amin(catObject)) == True:
+                colorRange = np.where(np.isnan(catObject) == False)[0]
+                filtNums = np.unique([colorRange, colorRange+1])  # To pick out right filters in calcMagNorm
             if len(colorRange) == 0:
                 print 'Could not match object #%i. No magnitudes for two adjacent bandpasses.' % (numOn)
                 notMatched += 1
@@ -91,7 +92,7 @@ class selectGalaxySED(matchGalaxy):
             else:
                 distanceArray = np.zeros(len(sedList))
                 for colorNum in colorRange:
-                    distanceArray += np.power((modelColors[colorNum] - catObject[colorNum]),2)
+                    distanceArray += np.power((modelColors[colorNum] - catObject[colorNum]), 2)
                 matchedSEDNum = np.nanargmin(distanceArray)
                 sedMatches.append(sedList[matchedSEDNum].name)
                 magNorm = self.calcMagNorm(np.array(catMags[numOn]), sedList[matchedSEDNum],
@@ -111,7 +112,6 @@ class selectGalaxySED(matchGalaxy):
     def matchToObserved(self, sedList, catMags, catRedshifts, catRA = None, catDec = None,
                         mag_error = None, bandpassDict = None, dzAcc = 2, reddening = True,
                         extCoeffs = (4.239, 3.303, 2.285, 1.698, 1.263)):
-
         """
         This will find the closest match to the magnitudes of a galaxy catalog if those magnitudes are in
         the observed frame and can correct for reddening from within the milky way as well if needed.
@@ -165,24 +165,25 @@ class selectGalaxySED(matchGalaxy):
         the colors of the matched SED.
         """
 
-        #Set up photometry to calculate model Mags
+        # Set up photometry to calculate model Mags
         if bandpassDict is None:
-            galPhot = BandpassDict.loadTotalBandpassesFromFiles(['u','g','r','i','z'],
-                                            bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),'sdss'),
-                                            bandpassRoot = 'sdss_')
+            galPhot = BandpassDict.loadTotalBandpassesFromFiles(['u', 'g', 'r', 'i', 'z'],
+                                                                bandpassDir = os.path.join(
+                                                                    lsst.utils.getPackageDir('throughputs'), 'sdss'),
+                                                                bandpassRoot = 'sdss_')
         else:
             galPhot = bandpassDict
 
-        #Calculate ebv from ra, dec coordinates if needed
+        # Calculate ebv from ra, dec coordinates if needed
         if reddening == True:
-            #Check that catRA and catDec are included
+            # Check that catRA and catDec are included
             if catRA is None or catDec is None:
                 raise RuntimeError("Reddening is True, but catRA and catDec are not included.")
             calcEBV = ebv()
-            raDec = np.array((catRA,catDec))
-            #If only matching one object need to reshape for calculateEbv
+            raDec = np.array((catRA, catDec))
+            # If only matching one object need to reshape for calculateEbv
             if len(raDec.shape) == 1:
-                raDec = raDec.reshape((2,1))
+                raDec = raDec.reshape((2, 1))
             ebvVals = calcEBV.calculateEbv(equatorialCoordinates = raDec)
             objMags = self.deReddenMags(ebvVals, catMags, extCoeffs)
         else:
@@ -220,39 +221,39 @@ class selectGalaxySED(matchGalaxy):
             colorSet = np.transpose(colorSet)
             for currentIndex in redshiftIndex[numOn:]:
                 matchMags = objMags[currentIndex]
-                if lastRedshift < np.round(catRedshifts[currentIndex],dzAcc) <= redshift:
+                if lastRedshift < np.round(catRedshifts[currentIndex], dzAcc) <= redshift:
                     colorRange = np.arange(0, len(galPhot)-1)
                     matchColors = []
                     for colorNum in colorRange:
                         matchColors.append(matchMags[colorNum] - matchMags[colorNum+1])
-                    #This is done to handle objects with incomplete magnitude data
+                    # This is done to handle objects with incomplete magnitude data
                     filtNums = np.arange(0, len(galPhot))
-                    if np.isnan(np.amin(matchColors))==True:
-                        colorRange = np.where(np.isnan(matchColors)==False)[0]
-                        filtNums = np.unique([colorRange, colorRange+1]) #Pick right filters in calcMagNorm
+                    if np.isnan(np.amin(matchColors)) == True:
+                        colorRange = np.where(np.isnan(matchColors) == False)[0]
+                        filtNums = np.unique([colorRange, colorRange+1])  # Pick right filters in calcMagNorm
                     if len(colorRange) == 0:
                         print 'Could not match object #%i. No magnitudes for two adjacent bandpasses.' \
                               % (currentIndex)
                         notMatched += 1
-                        #Don't need to assign 'None' here in result array, b/c 'None' is default value
+                        # Don't need to assign 'None' here in result array, b/c 'None' is default value
                     else:
                         distanceArray = [np.zeros(len(sedList))]
                         for colorNum in colorRange:
-                            distanceArray += np.power((colorSet[colorNum] - matchColors[colorNum]),2)
+                            distanceArray += np.power((colorSet[colorNum] - matchColors[colorNum]), 2)
                         matchedSEDNum = np.nanargmin(distanceArray)
                         sedMatches[currentIndex] = sedList[matchedSEDNum].name
-                        magNormVal = self.calcMagNorm(np.array(matchMags), sedList[matchedSEDNum], 
+                        magNormVal = self.calcMagNorm(np.array(matchMags), sedList[matchedSEDNum],
                                                       galPhot, mag_error = mag_error,
                                                       redshift = catRedshifts[currentIndex],
                                                       filtRange = filtNums)
                         magNormMatches[currentIndex] = magNormVal
-                        matchErrors[currentIndex] = (distanceArray[0,matchedSEDNum]/len(colorRange))
+                        matchErrors[currentIndex] = (distanceArray[0, matchedSEDNum]/len(colorRange))
                     numOn += 1
                 else:
                     break
             lastRedshift = redshift
 
-        print 'Done Matching. Matched %i of %i catalog objects to SEDs' % (len(catMags)-notMatched, 
+        print 'Done Matching. Matched %i of %i catalog objects to SEDs' % (len(catMags)-notMatched,
                                                                            len(catMags))
         if notMatched > 0:
             print '%i objects did not get matched.' % (notMatched)

@@ -2,7 +2,7 @@
 # lynne jones
 # simple example of calculating the colors of a set of varying temperature
 #  black bodies.  (Zeljko was looking for a table with this info for SDSS and LSST,
-#  and I thought it might serve as an example of using Sed/Bandpass in a method 
+#  and I thought it might serve as an example of using Sed/Bandpass in a method
 #  other than previously shown in example_SedBandpass, etc.)
 
 
@@ -29,7 +29,6 @@ for f in lsstflist:
     lsst[f].readThroughput(os.path.join(lsstdir, "total_"+f+".dat"))
 
 
-
 LIGHTSPEED = 299792458       # speed of light, = 2.9979e8 m/s
 PLANCK = 6.626068e-27        # planck's constant, = 6.626068e-27 ergs*seconds
 NM2M = 1.00e-9               # nanometers to meters conversion = 1e-9 m/nm
@@ -41,11 +40,11 @@ nu = LIGHTSPEED/(wavelen*NM2M)
 # set up header
 writestring = "## Temperature  SDSS:"
 for i in range(len(sdssflist)-1):
-    col = "%s-%s " %(sdssflist[i], sdssflist[i+1])
+    col = "%s-%s " % (sdssflist[i], sdssflist[i+1])
     writestring = writestring + col
 writestring = writestring + " LSST:"
 for i in range(len(lsstflist)-1):
-    col = "%s-%s " %(lsstflist[i], lsstflist[i+1])
+    col = "%s-%s " % (lsstflist[i], lsstflist[i+1])
     writestring = writestring + col
 print writestring
 
@@ -60,7 +59,7 @@ for temperature in temperatures:
     blackbody = Sed(wavelen, fnu=fnu)
     # wien's law: wavelen_max(m) = 0.0029/T
     #max = 0.0029/temperature/NM2M
-    writestring = "%d " %(temperature)
+    writestring = "%d " % (temperature)
     # Calculate magnitudes.
     sdssmag = {}
     for f in sdssflist:
@@ -68,13 +67,13 @@ for temperature in temperatures:
     lsstmag = {}
     for f in lsstflist:
         lsstmag[f] = blackbody.calcMag(lsst[f])
-    # Calculate colors. 
+    # Calculate colors.
     for i in range(len(sdssflist)-1):
         col = sdssmag[sdssflist[i]] - sdssmag[sdssflist[i+1]]
-        writestring = writestring + "%.3f " %(col)
+        writestring = writestring + "%.3f " % (col)
     for i in range(len(lsstflist)-1):
         col = lsstmag[lsstflist[i]] - lsstmag[lsstflist[i+1]]
-        writestring = writestring + "%.3f " %(col)    
+        writestring = writestring + "%.3f " % (col)
     print writestring
 
 

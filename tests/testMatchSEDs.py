@@ -16,6 +16,7 @@ from lsst.sims.photUtils.Bandpass import Bandpass
 from lsst.sims.photUtils import BandpassDict
 from lsst.sims.utils import SpecMap
 
+
 class TestMatchBase(unittest.TestCase):
 
     @classmethod
@@ -35,14 +36,14 @@ class TestMatchBase(unittest.TestCase):
         del cls.filterList
 
     def testCalcMagNorm(self):
-
         """Tests the calculation of magnitude normalization for an SED with the given magnitudes
         in the given bandpasses."""
 
         testUtils = matchBase()
         testPhot = BandpassDict.loadTotalBandpassesFromFiles(self.filterList,
-                                        bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),'sdss'),
-                                        bandpassRoot = 'sdss_')
+                                                             bandpassDir = os.path.join(
+                                                                 lsst.utils.getPackageDir('throughputs'), 'sdss'),
+                                                             bandpassRoot = 'sdss_')
 
         unChangedSED = Sed()
         unChangedSED.readSED_flambda(str(self.galDir + os.listdir(self.galDir)[0]))
@@ -59,10 +60,10 @@ class TestMatchBase(unittest.TestCase):
         sedMags = testPhot.magListForSed(testSED)
         stepSize = 0.001
         testMagNorm = testUtils.calcMagNorm(sedMags, unChangedSED, testPhot, redshift = redVal)
-        #Test adding in mag_errors. If an array of np.ones is passed in we should get same result
+        # Test adding in mag_errors. If an array of np.ones is passed in we should get same result
         testMagNormWithErr = testUtils.calcMagNorm(sedMags, unChangedSED, testPhot,
                                                    mag_error = np.ones(len(sedMags)), redshift = redVal)
-        #Also need to add in test for filtRange
+        # Also need to add in test for filtRange
         sedMagsIncomp = sedMags
         sedMagsIncomp[1] = None
         filtRangeTest = [0, 2, 3, 4]
@@ -73,14 +74,14 @@ class TestMatchBase(unittest.TestCase):
         self.assertAlmostEqual(magNorm, testMagNormFiltRange, delta = stepSize)
 
     def testCalcBasicColors(self):
-
         """Tests the calculation of the colors of an SED in given bandpasses."""
 
         testUtils = matchBase()
         testSED = Sed()
         testPhot = BandpassDict.loadTotalBandpassesFromFiles(self.filterList,
-                                        bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),'sdss'),
-                                        bandpassRoot = 'sdss_')
+                                                             bandpassDir = os.path.join(
+                                                                 lsst.utils.getPackageDir('throughputs'), 'sdss'),
+                                                             bandpassRoot = 'sdss_')
 
         testSED.readSED_flambda(str(self.galDir + os.listdir(self.galDir)[0]))
         testMags = testPhot.magListForSed(testSED)
@@ -92,7 +93,6 @@ class TestMatchBase(unittest.TestCase):
         np.testing.assert_equal([testColors], testOutput)
 
     def testSEDCopyBasicColors(self):
-
         """Tests that when makeCopy=True in calcBasicColors the SED object is unchanged after calling
         and that colors are still accurately calculated"""
 
@@ -100,8 +100,9 @@ class TestMatchBase(unittest.TestCase):
         testSED = Sed()
         copyTest = Sed()
         testPhot = BandpassDict.loadTotalBandpassesFromFiles(self.filterList,
-                                        bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),'sdss'),
-                                        bandpassRoot = 'sdss_')
+                                                             bandpassDir = os.path.join(
+                                                                 lsst.utils.getPackageDir('throughputs'), 'sdss'),
+                                                             bandpassRoot = 'sdss_')
         testSED.readSED_flambda(str(self.galDir + os.listdir(self.galDir)[0]))
         copyTest.setSED(wavelen = testSED.wavelen, flambda = testSED.flambda)
         testLambda = copyTest.wavelen[0]
@@ -115,29 +116,29 @@ class TestMatchBase(unittest.TestCase):
         np.testing.assert_equal([testColors], testOutput)
 
     def testDeReddenMags(self):
-
         """Test that consistent numbers come out of deReddening procedure"""
 
         am = 0.5
         coeffs = np.ones(5)
-        mags = np.arange(2,-3,-1)
+        mags = np.arange(2, -3, -1)
 
         testDeRed = matchBase().deReddenMags(am, mags, coeffs)
 
-        #Test Output
-        np.testing.assert_equal(testDeRed,[ mags-(am*coeffs)])
+        # Test Output
+        np.testing.assert_equal(testDeRed, [mags-(am*coeffs)])
+
 
 class TestMatchStar(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
 
-        #Left this in after removing loading SEDs so that we can make sure that if the structure of
-        #sims_sed_library changes in a way that affects testMatchSEDs we can detect it.
+        # Left this in after removing loading SEDs so that we can make sure that if the structure of
+        # sims_sed_library changes in a way that affects testMatchSEDs we can detect it.
         specMap = SpecMap()
         cls._specMapDict = {}
-        specFileStart = ['kp', 'burrows', 'bergeron'] #The beginning of filenames of different SED types
-        specFileTypes = ['kurucz', 'mlt','wd']
+        specFileStart = ['kp', 'burrows', 'bergeron']  # The beginning of filenames of different SED types
+        specFileTypes = ['kurucz', 'mlt', 'wd']
         for specStart, specKey in zip(specFileStart, specFileTypes):
             for key, val in sorted(specMap.subdir_map.iteritems()):
                 if re.match(key, specStart):
@@ -146,7 +147,7 @@ class TestMatchStar(unittest.TestCase):
         cls.kmTestName = 'km99_9999.fits_g99_9999'
         cls.mTestName = 'm99.99Full.dat'
 
-        #Set up Test Spectra Directory
+        # Set up Test Spectra Directory
         cls.testSpecDir = 'testMatchingSpectra'
         cls.testKDir = str(cls.testSpecDir + '/starSED/kurucz/')
         cls.testMLTDir = str(cls.testSpecDir + '/starSED/mlt/')
@@ -162,14 +163,14 @@ class TestMatchStar(unittest.TestCase):
         cls.mltDir = lsst.utils.getPackageDir('sims_sed_library') + '/' + cls._specMapDict['mlt'] + '/'
         cls.wdDir = lsst.utils.getPackageDir('sims_sed_library') + '/' + cls._specMapDict['wd'] + '/'
         kList = os.listdir(cls.kDir)[0:20]
-        #Use particular indices to get different types of seds within mlt and wds
+        # Use particular indices to get different types of seds within mlt and wds
         for kFile, mltFile, wdFile in zip(kList,
-                                          np.array(os.listdir(cls.mltDir))[np.arange(-10,11)],
-                                          np.array(os.listdir(cls.wdDir))[np.arange(-10,11)]):
+                                          np.array(os.listdir(cls.mltDir))[np.arange(-10, 11)],
+                                          np.array(os.listdir(cls.wdDir))[np.arange(-10, 11)]):
             shutil.copyfile(str(cls.kDir + kFile), str(cls.testKDir + kFile))
             shutil.copyfile(str(cls.mltDir + mltFile), str(cls.testMLTDir + mltFile))
             shutil.copyfile(str(cls.wdDir + wdFile), str(cls.testWDDir + wdFile))
-        #Load in extra kurucz to test Logz Readout
+        # Load in extra kurucz to test Logz Readout
         if 'km01_7000.fits_g40_7140.gz' not in kList:
             shutil.copyfile(str(cls.kDir + 'km01_7000.fits_g40_7140.gz'),
                             str(cls.testKDir + 'km01_7000.fits_g40_7140.gz'))
@@ -186,24 +187,24 @@ class TestMatchStar(unittest.TestCase):
 
     def testLoadKurucz(self):
         """Test SED loading algorithm by making sure SEDs are all accounted for """
-        #Test Matching to Kurucz SEDs
+        # Test Matching to Kurucz SEDs
         loadTestKurucz = matchStar(kuruczDir = self.testKDir)
         testSEDs = loadTestKurucz.loadKuruczSEDs()
 
-        #Read in a list of the SEDs in the kurucz test sed directory
+        # Read in a list of the SEDs in the kurucz test sed directory
         testKuruczList = os.listdir(self.testKDir)
 
-        #First make sure that all SEDs are correctly accounted for if no subset provided
+        # First make sure that all SEDs are correctly accounted for if no subset provided
         testNames = []
         for testSED in testSEDs:
             testNames.append(testSED.name)
         self.assertItemsEqual(testKuruczList, testNames)
 
-        #Test same condition if subset is provided
+        # Test same condition if subset is provided
         testSubsetList = ['km01_7000.fits_g40_7140.gz', 'kp01_7000.fits_g40_7240.gz']
         testSEDsSubset = loadTestKurucz.loadKuruczSEDs(subset = testSubsetList)
 
-        #Next make sure that correct subset loads if subset is provided
+        # Next make sure that correct subset loads if subset is provided
         testSubsetNames = []
         testSubsetLogZ = []
         testSubsetLogG = []
@@ -214,11 +215,11 @@ class TestMatchStar(unittest.TestCase):
             testSubsetLogG.append(testSED.logg)
             testSubsetTemp.append(testSED.temp)
         self.assertItemsEqual(testSubsetList, testSubsetNames)
-        self.assertEqual(testSubsetLogZ, [-0.1, 0.1]) #Test both pos. and neg. get in right
-        self.assertEqual(testSubsetLogG, [4.0, 4.0]) #Test storage of logg and temp
+        self.assertEqual(testSubsetLogZ, [-0.1, 0.1])  # Test both pos. and neg. get in right
+        self.assertEqual(testSubsetLogG, [4.0, 4.0])  # Test storage of logg and temp
         self.assertEqual(testSubsetTemp, [7140, 7240])
 
-        #Test that attributes have been assigned
+        # Test that attributes have been assigned
         for testSED in testSEDsSubset:
             self.assertIsNotNone(testSED.name)
             self.assertIsNotNone(testSED.logZ)
@@ -227,20 +228,20 @@ class TestMatchStar(unittest.TestCase):
 
     def testLoadMLT(self):
         """Test SED loading algorithm by making sure SEDs are all accounted for"""
-        #Test Matching to mlt SEDs
+        # Test Matching to mlt SEDs
         loadTestMLT = matchStar(mltDir = self.testMLTDir)
         testSEDs = loadTestMLT.loadmltSEDs()
 
-        #Read in a list of the SEDs in the mlt test sed directory
+        # Read in a list of the SEDs in the mlt test sed directory
         testMLTList = os.listdir(self.testMLTDir)
 
-        #First make sure that all SEDs are correctly accounted for if no subset provided
+        # First make sure that all SEDs are correctly accounted for if no subset provided
         testNames = []
         for testSED in testSEDs:
             testNames.append(testSED.name)
         self.assertItemsEqual(testMLTList, testNames)
 
-        #Next make sure that correct subset loads if subset is provided
+        # Next make sure that correct subset loads if subset is provided
         testSubsetList = testMLTList[0:2]
         testSEDsubset = loadTestMLT.loadmltSEDs(subset = testSubsetList)
         testSubsetNames = []
@@ -248,31 +249,31 @@ class TestMatchStar(unittest.TestCase):
             testSubsetNames.append(testSED.name)
         self.assertItemsEqual(testSubsetList, testSubsetNames)
 
-        #Test that attributes have been assigned
+        # Test that attributes have been assigned
         for testSED in testSEDsubset:
             self.assertIsNotNone(testSED.name)
 
     def testLoadWD(self):
         """Test SED loading algorithm by making sure SEDs are all accounted for and
         that there are separate lists for H and HE."""
-        #Test Matching to WD SEDs
+        # Test Matching to WD SEDs
         loadTestWD = matchStar(wdDir = self.testWDDir)
         testSEDsH, testSEDsHE = loadTestWD.loadwdSEDs()
 
-        #Add extra step because WD SEDs are separated into helium and hydrogen
+        # Add extra step because WD SEDs are separated into helium and hydrogen
         testNames = []
         for testH in testSEDsH:
             testNames.append(testH.name)
         for testHE in testSEDsHE:
             testNames.append(testHE.name)
 
-        #Read in a list of the SEDs in the wd test sed directory
+        # Read in a list of the SEDs in the wd test sed directory
         testWDList = os.listdir(self.testWDDir)
 
-        #First make sure that all SEDs are correctly accounted for if no subset provided
+        # First make sure that all SEDs are correctly accounted for if no subset provided
         self.assertItemsEqual(testNames, testWDList)
 
-        #Test same condition if subset is provided
+        # Test same condition if subset is provided
         testSubsetList = ['bergeron_10000_75.dat_10100.gz', 'bergeron_He_9000_80.dat_9400.gz']
 
         testSEDsSubsetH, testSEDsSubsetHE = selectStarSED().loadwdSEDs(subset = testSubsetList)
@@ -283,10 +284,10 @@ class TestMatchStar(unittest.TestCase):
         for testHE in testSEDsSubsetHE:
             testNamesSubset.append(testHE.name)
 
-        #Next make sure that correct subset loads if subset is provided
+        # Next make sure that correct subset loads if subset is provided
         self.assertItemsEqual(testNamesSubset, testSubsetList)
 
-        #Make sure that the names get separated into correct wd type
+        # Make sure that the names get separated into correct wd type
         self.assertEqual(testSEDsSubsetH[0].name, testSubsetList[0])
         self.assertEqual(testSEDsSubsetHE[0].name, testSubsetList[1])
 
@@ -308,6 +309,7 @@ class TestMatchStar(unittest.TestCase):
 
         shutil.rmtree(cls.testSpecDir)
 
+
 class TestMatchGalaxy(unittest.TestCase):
 
     @classmethod
@@ -320,7 +322,7 @@ class TestMatchGalaxy(unittest.TestCase):
                 galSpecDir = str(val)
         cls.galDir = str(lsst.utils.getPackageDir('sims_sed_library') + '/' + galSpecDir + '/')
 
-        #Set up Test Spectra Directory
+        # Set up Test Spectra Directory
         cls.testSpecDir = 'testGalaxySEDSpectrum/'
 
         if os.path.exists(cls.testSpecDir):
@@ -340,17 +342,17 @@ class TestMatchGalaxy(unittest.TestCase):
         loadTestBC03 = matchGalaxy(galDir = self.testSpecDir)
         testSEDs = loadTestBC03.loadBC03()
 
-        #Read in a list of the SEDs in the test galaxy sed directory
+        # Read in a list of the SEDs in the test galaxy sed directory
         testGalList = os.listdir(self.testSpecDir)
 
-        #Make sure the names of seds in folder and set that was read in are the same
-        #This also tests that the name attribute is assigned to each Spectrum object correctly
+        # Make sure the names of seds in folder and set that was read in are the same
+        # This also tests that the name attribute is assigned to each Spectrum object correctly
         testNames = []
         for testSED in testSEDs:
             testNames.append(testSED.name)
         self.assertItemsEqual(testGalList, testNames)
 
-        #Test same condition if a subset is provided
+        # Test same condition if a subset is provided
         testSubsetList = testGalList[0:2]
         testSEDsubset = loadTestBC03.loadBC03(subset = testSubsetList)
         testSubsetNames = []
@@ -358,7 +360,7 @@ class TestMatchGalaxy(unittest.TestCase):
             testSubsetNames.append(testSED.name)
         self.assertItemsEqual(testSubsetList, testSubsetNames)
 
-        #Test that attributes have been assigned
+        # Test that attributes have been assigned
         for testSED in testSEDsubset:
             self.assertIsNotNone(testSED.name)
             self.assertIsNotNone(testSED.type)
@@ -372,6 +374,7 @@ class TestMatchGalaxy(unittest.TestCase):
 
         shutil.rmtree(cls.testSpecDir)
 
+
 class TestSelectGalaxySED(unittest.TestCase):
 
     @classmethod
@@ -384,7 +387,7 @@ class TestSelectGalaxySED(unittest.TestCase):
                 galSpecDir = str(val)
         cls.galDir = str(lsst.utils.getPackageDir('sims_sed_library') + '/' + galSpecDir + '/')
 
-        #Set up Test Spectra Directory
+        # Set up Test Spectra Directory
         cls.testSpecDir = 'testGalaxySEDSpectrum/'
 
         if os.path.exists(cls.testSpecDir):
@@ -418,14 +421,14 @@ class TestSelectGalaxySED(unittest.TestCase):
             getSEDMags = Sed()
             testSEDNames.append(testSED.name)
             getSEDMags.setSED(wavelen = testSED.wavelen, flambda = testSED.flambda)
-            testMagNorm = np.round(np.random.uniform(20.0,22.0),magNormStep)
+            testMagNorm = np.round(np.random.uniform(20.0, 22.0), magNormStep)
             testMagNormList.append(testMagNorm)
             fluxNorm = getSEDMags.calcFluxNorm(testMagNorm, imSimBand)
             getSEDMags.multiplyFluxNorm(fluxNorm)
             testMags.append(galPhot.magListForSed(getSEDMags))
 
-        #Also testing to make sure passing in non-default bandpasses works
-        #Substitute in nan values to simulate incomplete data.
+        # Also testing to make sure passing in non-default bandpasses works
+        # Substitute in nan values to simulate incomplete data.
         testMags[0][1] = np.nan
         testMags[0][2] = np.nan
         testMags[0][4] = np.nan
@@ -437,11 +440,11 @@ class TestSelectGalaxySED(unittest.TestCase):
         self.assertEqual(None, testMatchingResults[1][0])
         np.testing.assert_almost_equal(testMagNormList[1:], testMatchingResults[1][1:], decimal = magNormStep)
 
-        #Test Match Errors
+        # Test Match Errors
         errMags = np.array((testMags[2], testMags[2], testMags[2], testMags[2]))
-        errMags[1,1] += 1. #Total MSE will be 2/(5 colors) = 0.4
+        errMags[1, 1] += 1.  # Total MSE will be 2/(5 colors) = 0.4
         errMags[2, 0:2] = np.nan
-        errMags[2, 3] += 1. #Total MSE will be 2/(3 colors) = 0.667
+        errMags[2, 3] += 1.  # Total MSE will be 2/(3 colors) = 0.667
         errMags[3, :] = None
         errSED = testSEDList[2]
         testMatchingResultsErrors = testMatching.matchToRestFrame([errSED], errMags,
@@ -483,27 +486,27 @@ class TestSelectGalaxySED(unittest.TestCase):
 
         for testSED in testSEDList:
 
-            #As a check make sure that it matches when no extinction and no redshift are present
+            # As a check make sure that it matches when no extinction and no redshift are present
             getSEDMags = Sed()
             testSEDNames.append(testSED.name)
             getSEDMags.setSED(wavelen = testSED.wavelen, flambda = testSED.flambda)
             testMags.append(galPhot.magListForSed(getSEDMags))
 
-            #Check Extinction corrections
-            sedRA = np.random.uniform(10,170)
-            sedDec = np.random.uniform(10,80)
+            # Check Extinction corrections
+            sedRA = np.random.uniform(10, 170)
+            sedDec = np.random.uniform(10, 80)
             testRA.append(sedRA)
             testDec.append(sedDec)
-            raDec = np.array((sedRA, sedDec)).reshape((2,1))
+            raDec = np.array((sedRA, sedDec)).reshape((2, 1))
             ebvVal = ebv().calculateEbv(equatorialCoordinates = raDec)
             extVal = ebvVal*extCoeffs
             testMagsExt.append(galPhot.magListForSed(getSEDMags) + extVal)
 
-            #Setup magnitudes for testing matching to redshifted values
+            # Setup magnitudes for testing matching to redshifted values
             getRedshiftMags = Sed()
-            testZ = np.round(np.random.uniform(1.1,1.3),3)
+            testZ = np.round(np.random.uniform(1.1, 1.3), 3)
             testRedshifts.append(testZ)
-            testMagNorm = np.round(np.random.uniform(20.0,22.0),magNormStep)
+            testMagNorm = np.round(np.random.uniform(20.0, 22.0), magNormStep)
             testMagNormList.append(testMagNorm)
             getRedshiftMags.setSED(wavelen = testSED.wavelen, flambda = testSED.flambda)
             getRedshiftMags.redshiftSED(testZ)
@@ -511,7 +514,7 @@ class TestSelectGalaxySED(unittest.TestCase):
             getRedshiftMags.multiplyFluxNorm(fluxNorm)
             testMagsRedshift.append(galPhot.magListForSed(getRedshiftMags))
 
-        #Will also test in passing of non-default bandpass
+        # Will also test in passing of non-default bandpass
         testNoExtNoRedshift = testMatching.matchToObserved(testSEDList, testMags, np.zeros(20),
                                                            reddening = False,
                                                            bandpassDict = galPhot)
@@ -519,7 +522,7 @@ class TestSelectGalaxySED(unittest.TestCase):
                                                            catRA = testRA, catDec = testDec,
                                                            reddening = True, extCoeffs = extCoeffs,
                                                            bandpassDict = galPhot)
-        #Substitute in nan values to simulate incomplete data and make sure magnorm works too.
+        # Substitute in nan values to simulate incomplete data and make sure magnorm works too.
         testMagsRedshift[0][1] = np.nan
         testMagsRedshift[0][3] = np.nan
         testMagsRedshift[0][4] = np.nan
@@ -536,14 +539,14 @@ class TestSelectGalaxySED(unittest.TestCase):
         np.testing.assert_almost_equal(testMagNormList[1:], testMatchingRedshift[1][1:],
                                        decimal = magNormStep)
 
-        #Test Match Errors
+        # Test Match Errors
         errMag = testMagsRedshift[2]
         errRedshift = testRedshifts[2]
         errMags = np.array((errMag, errMag, errMag, errMag))
         errRedshifts = np.array((errRedshift, errRedshift, errRedshift, errRedshift))
-        errMags[1,1] += 1. #Total MSE will be 2/(5 colors) = 0.4
+        errMags[1, 1] += 1.  # Total MSE will be 2/(5 colors) = 0.4
         errMags[2, 0:2] = np.nan
-        errMags[2, 3] += 1. #Total MSE will be 2/(3 colors) = 0.667
+        errMags[2, 3] += 1.  # Total MSE will be 2/(3 colors) = 0.667
         errMags[3, :] = None
         errSED = testSEDList[2]
         testMatchingResultsErrors = testMatching.matchToObserved([errSED], errMags, errRedshifts,
@@ -551,7 +554,7 @@ class TestSelectGalaxySED(unittest.TestCase):
                                                                  bandpassDict = galPhot,
                                                                  dzAcc = 3)
         np.testing.assert_almost_equal(np.array((0.0, 0.4, 2./3.)), testMatchingResultsErrors[2][0:3],
-                                       decimal = 2) #Give a little more leeway due to redshifting effects
+                                       decimal = 2)  # Give a little more leeway due to redshifting effects
         self.assertEqual(None, testMatchingResultsErrors[2][3])
 
     @classmethod
@@ -559,17 +562,18 @@ class TestSelectGalaxySED(unittest.TestCase):
         del cls.galDir
         shutil.rmtree(cls.testSpecDir)
 
+
 class TestSelectStarSED(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
 
-        #Left this in after removing loading SEDs so that we can make sure that if the structure of
-        #sims_sed_library changes in a way that affects testMatchSEDs we can detect it.
+        # Left this in after removing loading SEDs so that we can make sure that if the structure of
+        # sims_sed_library changes in a way that affects testMatchSEDs we can detect it.
         specMap = SpecMap()
         cls._specMapDict = {}
-        specFileStart = ['kp', 'burrows', 'bergeron'] #The beginning of filenames of different SED types
-        specFileTypes = ['kurucz', 'mlt','wd']
+        specFileStart = ['kp', 'burrows', 'bergeron']  # The beginning of filenames of different SED types
+        specFileTypes = ['kurucz', 'mlt', 'wd']
         for specStart, specKey in zip(specFileStart, specFileTypes):
             for key, val in sorted(specMap.subdir_map.iteritems()):
                 if re.match(key, specStart):
@@ -578,7 +582,7 @@ class TestSelectStarSED(unittest.TestCase):
         cls.kmTestName = 'km99_9999.fits_g99_9999'
         cls.mTestName = 'm99.99Full.dat'
 
-        #Set up Test Spectra Directory
+        # Set up Test Spectra Directory
         cls.testSpecDir = 'testMatchingSpectra'
         cls.testKDir = str(cls.testSpecDir + '/starSED/kurucz/')
         cls.testMLTDir = str(cls.testSpecDir + '/starSED/mlt/')
@@ -594,14 +598,14 @@ class TestSelectStarSED(unittest.TestCase):
         cls.mltDir = lsst.utils.getPackageDir('sims_sed_library') + '/' + cls._specMapDict['mlt'] + '/'
         cls.wdDir = lsst.utils.getPackageDir('sims_sed_library') + '/' + cls._specMapDict['wd'] + '/'
         kList = os.listdir(cls.kDir)[0:3]
-        #Use particular indices to get different types of seds within mlt and wds
+        # Use particular indices to get different types of seds within mlt and wds
         for kFile, mltFile, wdFile in zip(kList,
-                                          np.array(os.listdir(cls.mltDir))[np.arange(-3,0)],
-                                          np.array(os.listdir(cls.wdDir))[np.arange(-1,2)]):
+                                          np.array(os.listdir(cls.mltDir))[np.arange(-3, 0)],
+                                          np.array(os.listdir(cls.wdDir))[np.arange(-1, 2)]):
             shutil.copyfile(str(cls.kDir + kFile), str(cls.testKDir + kFile))
             shutil.copyfile(str(cls.mltDir + mltFile), str(cls.testMLTDir + mltFile))
             shutil.copyfile(str(cls.wdDir + wdFile), str(cls.testWDDir + wdFile))
-        #Load in extra kurucz to test Logz Readout
+        # Load in extra kurucz to test Logz Readout
         if 'km01_7000.fits_g40_7140.gz' not in kList:
             shutil.copyfile(str(cls.kDir + 'km01_7000.fits_g40_7140.gz'),
                             str(cls.testKDir + 'km01_7000.fits_g40_7140.gz'))
@@ -622,9 +626,10 @@ class TestSelectStarSED(unittest.TestCase):
         """Pull SEDs from each type and make sure that each SED gets matched to itself.
         Includes testing with extinction and passing in only colors."""
         np.random.seed(42)
-        starPhot = BandpassDict.loadTotalBandpassesFromFiles(('u','g','r','i','z'),
-                                        bandpassDir = os.path.join(lsst.utils.getPackageDir('throughputs'),'sdss'),
-                                        bandpassRoot = 'sdss_')
+        starPhot = BandpassDict.loadTotalBandpassesFromFiles(('u', 'g', 'r', 'i', 'z'),
+                                                             bandpassDir = os.path.join(
+                                                                 lsst.utils.getPackageDir('throughputs'), 'sdss'),
+                                                             bandpassRoot = 'sdss_')
 
         imSimBand = Bandpass()
         imSimBand.imsimBandpass()
@@ -652,7 +657,7 @@ class TestSelectStarSED(unittest.TestCase):
                     getSEDMags = Sed()
                     typeSEDNames.append(testSED.name)
                     getSEDMags.setSED(wavelen = testSED.wavelen, flambda = testSED.flambda)
-                    testMagNorm = np.round(np.random.uniform(20.0,22.0),magNormStep)
+                    testMagNorm = np.round(np.random.uniform(20.0, 22.0), magNormStep)
                     typeMagNorms.append(testMagNorm)
                     fluxNorm = getSEDMags.calcFluxNorm(testMagNorm, imSimBand)
                     getSEDMags.multiplyFluxNorm(fluxNorm)
@@ -664,8 +669,8 @@ class TestSelectStarSED(unittest.TestCase):
         fakeRA = np.ones(len(testSEDList[0]))
         fakeDec = np.ones(len(testSEDList[0]))
 
-        #Since default bandpassDict should be SDSS ugrizy shouldn't need to specify it
-        #Substitute in nan values to simulate incomplete data.
+        # Since default bandpassDict should be SDSS ugrizy shouldn't need to specify it
+        # Substitute in nan values to simulate incomplete data.
         for typeList, names, mags, magNorms in zip(testSEDList, testSEDNames, testMags, testMagNormList):
             if len(typeList) > 2:
                 nanMags = np.array(mags)
@@ -684,7 +689,7 @@ class TestSelectStarSED(unittest.TestCase):
                 self.assertEqual(names, testMatchingResults[0])
                 np.testing.assert_almost_equal(magNorms, testMatchingResults[1], decimal = magNormStep)
 
-        #Test Null Values option
+        # Test Null Values option
         nullMags = np.array(testMags[0])
         nullMags[0][0] = -99.
         nullMags[0][4] = -99.
@@ -696,11 +701,11 @@ class TestSelectStarSED(unittest.TestCase):
         np.testing.assert_almost_equal(testMagNormList[0], testMatchingResultsNull[1],
                                        decimal = magNormStep)
 
-        #Test Error Output
+        # Test Error Output
         errMags = np.array((testMags[0][0], testMags[0][0], testMags[0][0], testMags[0][0]))
-        errMags[1,1] += 1. #Total MSE will be 2/(4 colors) = 0.5
+        errMags[1, 1] += 1.  # Total MSE will be 2/(4 colors) = 0.5
         errMags[2, 0:2] = np.nan
-        errMags[2, 3] += 1. #Total MSE will be 2/(2 colors) = 1.0
+        errMags[2, 3] += 1.  # Total MSE will be 2/(2 colors) = 1.0
         errMags[3, :] = None
         errSED = testSEDList[0][0]
         testMatchingResultsErrors = testMatching.findSED([errSED], errMags, reddening = False)
@@ -708,7 +713,7 @@ class TestSelectStarSED(unittest.TestCase):
                                        decimal = 3)
         self.assertEqual(None, testMatchingResultsErrors[2][3])
 
-        #Now test what happens if we pass in a bandpassDict
+        # Now test what happens if we pass in a bandpassDict
         testMatchingResultsNoDefault = testMatching.findSED(testSEDList[0], testMags[0],
                                                             bandpassDict = starPhot,
                                                             reddening = False)
@@ -716,9 +721,9 @@ class TestSelectStarSED(unittest.TestCase):
         np.testing.assert_almost_equal(testMagNormList[0], testMatchingResultsNoDefault[1],
                                        decimal = magNormStep)
 
-        #Test Reddening
-        testRA = np.random.uniform(10,170,len(testSEDList[0]))
-        testDec = np.random.uniform(10,80,len(testSEDList[0]))
+        # Test Reddening
+        testRA = np.random.uniform(10, 170, len(testSEDList[0]))
+        testDec = np.random.uniform(10, 80, len(testSEDList[0]))
         extFactor = .5
         raDec = np.array((testRA, testDec))
         ebvVals = ebv().calculateEbv(equatorialCoordinates = raDec)
@@ -733,7 +738,7 @@ class TestSelectStarSED(unittest.TestCase):
         np.testing.assert_almost_equal(testMagNormList[0], testMatchingResultsRed[1],
                                        decimal = magNormStep)
 
-        #Finally, test color input
+        # Finally, test color input
         testColors = []
         for testMagSet in testMags[0]:
             testColorSet = []
@@ -764,6 +769,7 @@ class TestSelectStarSED(unittest.TestCase):
 
         shutil.rmtree(cls.testSpecDir)
 
+
 def suite():
     utilsTests.init()
     suites = []
@@ -774,7 +780,8 @@ def suite():
     suites += unittest.makeSuite(TestSelectStarSED)
     return unittest.TestSuite(suites)
 
+
 def run(shouldExit = False):
-    utilsTests.run(suite(),shouldExit)
+    utilsTests.run(suite(), shouldExit)
 if __name__ == "__main__":
     run(True)
